@@ -1,25 +1,19 @@
-/*
- *
- * UDPServer
- * Compile: javac UDPServer.java
- * Run: java UDPServer
- */
-
 import java.io.*;
 import java.net.*;
 
-public class UDPServer {
+public class Receiver {
 
 	public static void main(String[] args)throws Exception {
         /* define socket parameters, Address + PortNo, Address will default to localhost */
-		int serverPort = 6789; 
+		int receiverPort = Integer.parseInt(args[0]);
+        String fileReceived = args[1];
 		/* change above port number if required */
 		
-		/*create server socket that is assigned the serverPort (6789)
+		/*create receiver socket that is assigned the receiverPort (6789)
         We will listen on this port for requests from clients
          DatagramSocket specifies that we are using UDP */
-		DatagramSocket serverSocket = new DatagramSocket(serverPort);
-        System.out.println("Server is ready :");
+		DatagramSocket receiverSocket = new DatagramSocket(receiverPort);
+        System.out.println("receiver is ready :");
         
         //prepare buffers
         byte[] receiveData = new byte[1024];
@@ -28,7 +22,7 @@ public class UDPServer {
         while (true){
             //receive UDP datagram
             DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
-            serverSocket.receive(receivePacket);
+            receiverSocket.receive(receivePacket);
             
             //get data
             String sentence = new String( receivePacket.getData());
@@ -46,10 +40,10 @@ public class UDPServer {
             
             //send it back to client
             DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
-            serverSocket.send(sendPacket);
+            receiverSocket.send(sendPacket);
             
 		} // end of while (true)
 
 	} // end of main()
 
-} // end of class UDPServer
+} // end of class 
