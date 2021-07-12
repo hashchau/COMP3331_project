@@ -1,0 +1,2 @@
+java Sender 127.0.0.1 5000 32KB.txt 1 1 1 1 1
+java Receiver 5000 FileReceived.txt 

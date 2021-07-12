@@ -31,32 +31,81 @@ public class Sender {
 		BufferedReader inFromFile =
 			new BufferedReader(new FileReader(fileToSend));
         
+        
+
         //prepare for sending
         byte[] sendData = new byte[1024];
-        String firstLine = inFromFile.readLine();
-        sendData = firstLine.getBytes(); 
-		// write to receiver, need to create DatagramPAcket with receiver 
-        // address and port No
-        DatagramPacket sendPacket = 
-            new DatagramPacket(sendData, sendData.length, receiverHostIP, 
-                receiverPort);
+        int currChar = inFromFile.read();
+        // Three-way handshake complete so send the file.
+        while ((currChar = inFromFile.read()) != -1) {
+            byte currByte = (byte) currChar;
+            sendData[0] = currByte;
+            // write to receiver, need to create DatagramPacket with receiver 
+            // address and port No
+            DatagramPacket sendPacket = 
+                new DatagramPacket(sendData, sendData.length, receiverHostIP, 
+                    receiverPort);
+            //actual send call
+            clientSocket.send(sendPacket);
 
-        //actual send call
-        clientSocket.send(sendPacket);
+            //prepare buffer to receive reply
+            byte[] receiveData=new byte[1024];
+            // receive from receiver
+            DatagramPacket receivePacket = new DatagramPacket(receiveData,receiveData.length);
+            clientSocket.receive(receivePacket);
+            
+            String modifiedSentence = new String(receivePacket.getData());
+            System.out.println("FROM receiver:" + modifiedSentence);
+            //close the scoket
+
+        }
         
-        //prepare buffer to receive reply
-        byte[] receiveData=new byte[1024];
-		// receive from receiver
-        DatagramPacket receivePacket = new DatagramPacket(receiveData,receiveData.length);
-        clientSocket.receive(receivePacket);
-        
-        String modifiedSentence = new String(receivePacket.getData());
-        System.out.println("FROM receiver:" + modifiedSentence);
-        //close the scoket
         clientSocket.close();
 
         inFromFile.close();
 		
 	} // end of main
 
-} // end of class UDPClient
+    // private static void senderHandshake(InetAddress receiverHostIP, 
+    //     int receiverPort, DatagramSocket clientSocket) {
+    //     byte[] sendData = new byte[1024];
+    //     sendData = "SYN".getBytes();
+    //     System.err.println("Sending SYN.");
+    //     DatagramPacket sendPacket = 
+    //         new DatagramPacket(sendData, sendData.length, receiverHostIP, 
+    //             receiverPort);
+    //     //actual send call
+    //     try {
+    //         clientSocket.send(sendPacket);
+    //     } catch (IOException e) {
+    //         e.printStackTrace();
+    //     }
+
+    //     //prepare buffer to receive reply
+    //     byte[] receiveData=new byte[1024];
+    //     // receive from receiver
+    //     DatagramPacket receivePacket = new DatagramPacket(receiveData,receiveData.length);
+    //     try {
+    //         clientSocket.receive(receivePacket);
+    //     } catch (IOException e) {
+    //         e.printStackTrace();
+    //     }
+
+    //     String receivedSentence = new String(receivePacket.getData());
+    //     if (receivedSentence.equals("SYNACK")) {
+    //         sendData = "ACK".getBytes();
+    //         System.err.println("Got SYNACK so sending out ACK.");
+    //         sendPacket = 
+    //         new DatagramPacket(sendData, sendData.length, receiverHostIP, 
+    //             receiverPort);
+    //         try {
+    //             clientSocket.send(sendPacket);
+    //         } catch (IOException e) {
+    //             e.printStackTrace();
+    //         }
+    //     }
+
+    // }
+
+} // end of class Sender
+
