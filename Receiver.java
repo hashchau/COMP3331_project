@@ -16,9 +16,11 @@ public class Receiver {
         System.out.println("receiver is ready :");
         
         //prepare buffers
-        byte[] receiveData = new byte[1024];
-        byte[] sendData = new byte[1024];
+        byte[] receiveData = new byte[64];
+        // byte[] sendData = new byte[1024];
 
+        File fileReceived = new File(outputFilename);
+        FileOutputStream outputStream = new FileOutputStream(fileReceived);
 		
         while (true){
             //receive UDP datagram
@@ -29,10 +31,11 @@ public class Receiver {
             InetAddress IPAddress = receivePacket.getAddress();
             int port = receivePacket.getPort();
             
-            File fileReceived = new File(outputFilename);
-            FileOutputStream outputStream = new FileOutputStream(fileReceived);
+
+            String currString = new String(receivePacket.getData());
+            System.err.print("Current string is: " + currString + "\n");
+
             outputStream.write(receivePacket.getData());
-            outputStream.close();
 
             //send it back to client
             // DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
