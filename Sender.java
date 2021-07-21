@@ -3,7 +3,7 @@ import java.net.*;
 import java.nio.*;
 
 public class Sender {
-
+    private static final int HEADERSIZE = 18;
 	public static void main(String[] args) throws Exception {
 
 
@@ -18,25 +18,24 @@ public class Sender {
         double probabilityDrop = Double.parseDouble(args[6]);
         double seed = Double.parseDouble(args[7]);
 		
-		// create socket which connects to receiver
+		// create socket, using any port, which connects to receiver
 		DatagramSocket clientSocket = new DatagramSocket(0);
         /*
         This line creates the client’s socket, called clientSocket. 
         DatagramSocket indicates that we are using UDP.
         */
+
+        int initSeqNum = 10000;
+
+        byte[] handshakeData = new byte[HEADERSIZE];
         
-		// get input from file
 
+        // get input from file
         File fileToSend = new File(filename);
-
         FileInputStream inFromFile = new FileInputStream(fileToSend);
-
+        int i = 1;
         //prepare for sending
         byte[] sendData = new byte[64];
-
-        int i = 1;
-
-        int initSeqNum = 0;
 
         while ((inFromFile.read(sendData)) != -1) {
 
@@ -58,16 +57,7 @@ public class Sender {
 		
 	} // end of main
 
-    private static byte[] intToBytes(int i) {
-        ByteBuffer currBuffer = ByteBuffer.allocate(4);
-        currBuffer.putInt(i);
-        return currBuffer.array();
-    }
 
-    private static int byteArrayToInt(byte[] intBytes) {
-        ByteBuffer currBuffer = ByteBuffer.wrap(intBytes);
-        return currBuffer.getInt();
-    }
 
     // private static void senderHandshake(InetAddress receiverHostIP, 
     //     int receiverPort, DatagramSocket clientSocket) {
