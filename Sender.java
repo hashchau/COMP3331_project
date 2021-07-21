@@ -1,5 +1,6 @@
 import java.io.*;
 import java.net.*;
+import java.nio.*;
 
 public class Sender {
 
@@ -35,6 +36,8 @@ public class Sender {
 
         int i = 1;
 
+        int initSeqNum = 0;
+
         while ((inFromFile.read(sendData)) != -1) {
 
             // write to receiver, need to create DatagramPacket with receiver 
@@ -54,6 +57,17 @@ public class Sender {
         inFromFile.close();
 		
 	} // end of main
+
+    private static byte[] intToBytes(int i) {
+        ByteBuffer currBuffer = ByteBuffer.allocate(4);
+        currBuffer.putInt(i);
+        return currBuffer.array();
+    }
+
+    private static int byteArrayToInt(byte[] intBytes) {
+        ByteBuffer currBuffer = ByteBuffer.wrap(intBytes);
+        return currBuffer.getInt();
+    }
 
     // private static void senderHandshake(InetAddress receiverHostIP, 
     //     int receiverPort, DatagramSocket clientSocket) {
