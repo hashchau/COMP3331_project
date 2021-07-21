@@ -1,6 +1,5 @@
 import java.io.*;
 import java.net.*;
-import java.nio.file.Files;
 
 public class Sender {
 
@@ -28,20 +27,15 @@ public class Sender {
 		// get input from file
 
         File fileToSend = new File(filename);
-		
-		// BufferedReader inFromFile =
-		// 	new BufferedReader(new FileReader(fileToSend));
 
         FileInputStream inFromFile = new FileInputStream(fileToSend);
 
         //prepare for sending
         byte[] sendData = new byte[64];
-        // int currChar;
+
+        int i = 1;
 
         while ((inFromFile.read(sendData)) != -1) {
-
-            // byte currByte = (byte) currChar;
-            // sendData[0] = currByte;
 
             // write to receiver, need to create DatagramPacket with receiver 
             // address and port No
@@ -50,16 +44,9 @@ public class Sender {
                     receiverPort);
             //actual send call
             clientSocket.send(sendPacket);
-
-            // //prepare buffer to receive reply
-            // byte[] receiveData=new byte[1024];
-            // // receive from receiver
-            // DatagramPacket receivePacket = new DatagramPacket(receiveData,receiveData.length);
-            // clientSocket.receive(receivePacket);
-            
-            // String modifiedSentence = new String(receivePacket.getData());
-            // System.out.println("FROM receiver:" + modifiedSentence);
-
+            String currLine = new String(sendData);
+            System.err.print("Sent string " + i + ": " + currLine);
+            i++;
         }
         
         //close the scoket

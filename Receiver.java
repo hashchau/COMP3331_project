@@ -13,7 +13,7 @@ public class Receiver {
         We will listen on this port for requests from clients
          DatagramSocket specifies that we are using UDP */
 		DatagramSocket receiverSocket = new DatagramSocket(receiverPort);
-        System.out.println("receiver is ready :");
+        System.out.println("Receiver is ready:");
         
         //prepare buffers
         byte[] receiveData = new byte[64];
@@ -22,6 +22,8 @@ public class Receiver {
         File fileReceived = new File(outputFilename);
         FileOutputStream outputStream = new FileOutputStream(fileReceived);
 		
+        int i = 1;
+
         while (true){
             //receive UDP datagram
             DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
@@ -33,14 +35,11 @@ public class Receiver {
             
 
             String currString = new String(receivePacket.getData());
-            System.err.print("Current string is: " + currString + "\n");
+            System.err.print("Received string " + i + ": " + currString);
 
             outputStream.write(receivePacket.getData());
-
-            //send it back to client
-            // DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
-            // receiverSocket.send(sendPacket);
-            // System.err.println("Sending back: [" + sentence + "]");
+            receivePacket.setLength(receiveData.length);
+            i++;
             
 
 		} // end of while (true)
