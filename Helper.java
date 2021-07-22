@@ -1,4 +1,3 @@
-import java.nio.*;
 
 public class Helper {
     public static void printHeader(int seqNum, int ackNum, int ackFlag, 

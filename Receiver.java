@@ -35,8 +35,8 @@ public class Receiver {
         int maxSegmentSize = dataIn.readInt();
         int maxWindowSize = dataIn.readInt();
 
-        Helper.printHeader(seqNum, ackNum, ackFlag, synFlag, finFlag, 
-            maxSegmentSize, maxWindowSize);
+        // Helper.printHeader(seqNum, ackNum, ackFlag, synFlag, finFlag, 
+        //     maxSegmentSize, maxWindowSize);
 
         if (synFlag == 1) {
             System.err.println("Received SYN, so sending out SYN-ACK.");
@@ -73,8 +73,8 @@ public class Receiver {
         maxSegmentSize = dataIn.readInt();
         maxWindowSize = dataIn.readInt();
 
-        Helper.printHeader(seqNum, ackNum, ackFlag, synFlag, finFlag, 
-            maxSegmentSize, maxWindowSize);
+        // Helper.printHeader(seqNum, ackNum, ackFlag, synFlag, finFlag, 
+        //     maxSegmentSize, maxWindowSize);
 
         if (ackFlag == 1) {
             System.err.println("Received ACK, so await data transfer.");
@@ -87,7 +87,8 @@ public class Receiver {
         // int i = 1;
         // while (true){
         //     //receive UDP datagram
-        //     DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+        //     DatagramPacket receivePacket = 
+        //          new DatagramPacket(receiveData, receiveData.length);
         //     receiverSocket.receive(receivePacket);
         //     String currString = new String(receivePacket.getData());
         //     System.err.print("Received string " + i + ": " + currString);
@@ -111,8 +112,8 @@ public class Receiver {
         maxSegmentSize = dataIn.readInt();
         maxWindowSize = dataIn.readInt();
 
-        Helper.printHeader(seqNum, ackNum, ackFlag, synFlag, finFlag, 
-            maxSegmentSize, maxWindowSize);
+        // Helper.printHeader(seqNum, ackNum, ackFlag, synFlag, finFlag, 
+        //     maxSegmentSize, maxWindowSize);
 
         if (finFlag == 1) {
             System.err.println("Received client's FIN, so sending out ACK.");
@@ -155,7 +156,7 @@ public class Receiver {
             clientHostIP, clientPort);
             receiverSocket.send(ackPacket);
 
-        // Receive ACK
+        // Receive ACK --------------------------------------------------------
 
         receiverSocket.receive(receivePacket);
 
@@ -170,8 +171,8 @@ public class Receiver {
         maxSegmentSize = dataIn.readInt();
         maxWindowSize = dataIn.readInt();
 
-        Helper.printHeader(seqNum, ackNum, ackFlag, synFlag, finFlag, 
-            maxSegmentSize, maxWindowSize);
+        // Helper.printHeader(seqNum, ackNum, ackFlag, synFlag, finFlag, 
+        //     maxSegmentSize, maxWindowSize);
 
         if (ackFlag == 1) {
             System.err.println("Received ACK so close receiver socket.");

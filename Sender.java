@@ -16,8 +16,12 @@ public class Sender {
         double timeout = Double.parseDouble(args[5]);
         double probabilityDrop = Double.parseDouble(args[6]);
         double seed = Double.parseDouble(args[7]);
+
+        // Open Sender_log.txt for logging sender packets
+        File senderLogFile = new File("Sender_log.txt");
+        FileOutputStream logStream = new FileOutputStream(senderLogFile);
 		
-		// create socket, using any port, which connects to receiver
+		// Create socket, using any port, which connects to receiver
 		DatagramSocket clientSocket = new DatagramSocket(0);
 
         // Send out SYN -------------------------------------------------------
@@ -57,8 +61,8 @@ public class Sender {
         maxSegmentSize = dataIn.readInt();
         maxWindowSize = dataIn.readInt();
         
-        Helper.printHeader(seqNum, ackNum, ackFlag, synFlag, finFlag, 
-            maxSegmentSize, maxWindowSize);
+        // Helper.printHeader(seqNum, ackNum, ackFlag, synFlag, finFlag, 
+        //     maxSegmentSize, maxWindowSize);
 
         if (synFlag == 1 && ackFlag == 1) {
             System.err.println("Received SYN-ACK, so sending out ACK.");
@@ -139,8 +143,8 @@ public class Sender {
         synFlag = dataIn.readByte();
         finFlag = dataIn.readByte(); 
         
-        Helper.printHeader(seqNum, ackNum, ackFlag, synFlag, finFlag, 
-            maxSegmentSize, maxWindowSize);
+        // Helper.printHeader(seqNum, ackNum, ackFlag, synFlag, finFlag, 
+        //     maxSegmentSize, maxWindowSize);
 
         if (ackFlag == 1) {
             System.err.println("Received ACK so wait for server's FIN.");
@@ -162,8 +166,8 @@ public class Sender {
         synFlag = dataIn.readByte();
         finFlag = dataIn.readByte(); 
         
-        Helper.printHeader(seqNum, ackNum, ackFlag, synFlag, finFlag, 
-            maxSegmentSize, maxWindowSize);
+        // Helper.printHeader(seqNum, ackNum, ackFlag, synFlag, finFlag, 
+        //     maxSegmentSize, maxWindowSize);
 
         if (finFlag == 1) {
             System.err.println("Received server's FIN so sending out ACK.");
@@ -189,7 +193,7 @@ public class Sender {
         // Close the socket ---------------------------------------------------
 
         clientSocket.close();
-
+        logStream.close();
         // inFromFile.close();
 		
 	} // end of main
