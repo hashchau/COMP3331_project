@@ -3,7 +3,7 @@ import java.net.*;
 
 public class Receiver {
 
-    // private static final int HEADERSIZE = 18;
+    private static final int headerSize = 19;
 
 	public static void main(String[] args) throws Exception {
 
@@ -28,7 +28,7 @@ public class Receiver {
         
         // Receive SYN and send out SYN-ACK -----------------------------------
 
-        byte[] receiveData = new byte[64];
+        byte[] receiveData = new byte[headerSize];
 
         DatagramPacket receivePacket = 
             new DatagramPacket(receiveData, receiveData.length);
@@ -48,6 +48,10 @@ public class Receiver {
         int senderFinFlag = dataIn.readByte();
         int maxSegmentSize = dataIn.readInt();
         int maxWindowSize = dataIn.readInt();
+
+        // Calculate packet size from given MSS and designed header size.
+        int packetSize = headerSize + maxSegmentSize;
+        byte[] fileData = new byte[maxSegmentSize];
 
         receiverAckNum = senderSeqNum + 1;
 
@@ -101,24 +105,40 @@ public class Receiver {
                 senderSeqNum, senderNumBytes, senderAckNum);
         }
 
-        // Receive file -------------------------------------------------------
+        // RECEIVE FILE -------------------------------------------------------
 
-        // File fileReceived = new File(outputFilename);
-        // FileOutputStream outputStream = new FileOutputStream(fileReceived);
-        // int i = 1;
-        // while (true){
-        //     //receive UDP datagram
-        //     DatagramPacket receivePacket = 
-        //          new DatagramPacket(receiveData, receiveData.length);
-        //     receiverSocket.receive(receivePacket);
-        //     String currString = new String(receivePacket.getData());
-        //     System.err.print("Received string " + i + ": " + currString);
-        //     outputStream.write(receivePacket.getData());
-        //     receivePacket.setLength(receiveData.length);
-        //     i++;
-		// } // end of while (true)
+        File fileReceived = new File(outputFilename);
+        FileOutputStream outputStream = new FileOutputStream(fileReceived);
+        while (true) {
 
+            //receive UDP datagram
+            receivePacket = 
+                 new DatagramPacket(receiveData, receiveData.length);
+            receiverSocket.receive(receivePacket);
 
+            currBytes = receivePacket.getData();
+            byteIn = new ByteArrayInputStream(currBytes);
+            dataIn = new DataInputStream(byteIn);
+            senderSeqNum = dataIn.readInt();
+            senderAckNum = dataIn.readInt();
+            senderAckFlag = dataIn.readByte();
+            senderSynFlag = dataIn.readByte();
+            senderFinFlag = dataIn.readByte();
+            maxSegmentSize = dataIn.readInt();
+            maxWindowSize = dataIn.readInt();
+            fileData = dataIn.readNBytes(maxSegmentSize);
+
+            Logger.logData(logStream, "rcv", 
+                Helper.elapsedTimeInMillis(start, System.nanoTime()), "D", 
+                senderSeqNum, senderNumBytes, senderAckNum);
+
+            outputStream.write(fileData);
+            receivePacket.setLength(receiveData.length);
+
+            if (senderFinFlag == 1) {
+                break;
+            }
+		} // end of while (true)
 
         // Receive sender's FIN and send out FIN-ACK for it -------------------
 
@@ -186,6 +206,7 @@ public class Receiver {
             Logger.logData(logStream, "rcv", 
                 Helper.elapsedTimeInMillis(start, System.nanoTime()), "A", 
                 senderSeqNum, senderNumBytes, senderAckNum);
+            outputStream.close();
             receiverSocket.close();
         }
 

@@ -2,7 +2,7 @@ import java.io.*;
 import java.net.*;
 
 public class Sender {
-    // private static final int HEADERSIZE = 18;
+    private static final int headerSize = 19;
 	public static void main(String[] args) throws Exception {
 
         // Initialise seq and ack nums for logging.
@@ -14,13 +14,15 @@ public class Sender {
 		// Define socket parameters, address and Port No
         InetAddress receiverHostIP = InetAddress.getByName(args[0]);
 		int receiverPort = Integer.parseInt(args[1]); 
-		//change above port number if required
         String filename = args[2];
         int maxWindowSize = Integer.parseInt(args[3]);
         int maxSegmentSize = Integer.parseInt(args[4]);
         double timeout = Double.parseDouble(args[5]);
         double probabilityDrop = Double.parseDouble(args[6]);
         double seed = Double.parseDouble(args[7]);
+
+        // Calculate packet size from given MSS and designed header size.
+        int packetSize = headerSize + maxSegmentSize;
 
         // Open Sender_log.txt for logging sender packets
         File senderLogFile = new File("Sender_log.txt");
@@ -57,7 +59,7 @@ public class Sender {
 
         // Receive SYN-ACK and send out ACK -----------------------------------
 
-        byte[] receiveData = new byte[64];
+        byte[] receiveData = new byte[packetSize];
 
         DatagramPacket receivePacket = 
             new DatagramPacket(receiveData, receiveData.length);
@@ -105,30 +107,49 @@ public class Sender {
                 senderSeqNum, senderNumBytes, senderAckNum);
         }
 
-        // Send out file ------------------------------------------------------
+        // SEND OUT FILE ------------------------------------------------------
 
-        // // get input from file
-        // File fileToSend = new File(filename);
-        // FileInputStream inFromFile = new FileInputStream(fileToSend);
-        // int i = 1;
-        // //prepare for sending
-        // byte[] sendData = new byte[64];
+        // get input from file
+        File fileToSend = new File(filename);
+        FileInputStream inFromFile = new FileInputStream(fileToSend);
 
-        // while ((inFromFile.read(sendData)) != -1) {
+        //prepare for sending
+        byte[] fileData = new byte[maxSegmentSize];
+        senderNumBytes = maxSegmentSize;
 
-        //     // write to receiver, need to create DatagramPacket with receiver 
-        //     // address and port No
-        //     DatagramPacket sendPacket = 
-        //         new DatagramPacket(sendData, sendData.length, 
-        //         receiverHostIP, receiverPort);
-        //     //actual send call
-        //     senderSocket.send(sendPacket);
-        //     String currLine = new String(sendData);
-        //     System.err.print("Sent string " + i + ": " + currLine);
-        //     i++;
-        // }
+        while ((inFromFile.read(fileData)) != -1) {
+
+            byteOut = new ByteArrayOutputStream();
+            dataOut = new DataOutputStream(byteOut);
+            dataOut.writeInt(senderSeqNum); // Sequence number
+            dataOut.writeInt(senderAckNum); // ACK number
+            dataOut.writeByte(0); // ACK flag
+            dataOut.writeByte(0); // SYN flag
+            dataOut.writeByte(0); // FIN flag
+            dataOut.writeInt(maxSegmentSize); // MSS
+            dataOut.writeInt(maxWindowSize); // MWS
+            dataOut.write(fileData);
+
+            byte[] sendData = byteOut.toByteArray();
+            DatagramPacket sendPacket = 
+                new DatagramPacket(sendData, sendData.length, 
+                receiverHostIP, receiverPort);
+            //actual send call
+            senderSocket.send(sendPacket);
+
+            Logger.logData(logStream, "snd", 
+                Helper.elapsedTimeInMillis(start, System.nanoTime()), "D", 
+                senderSeqNum, senderNumBytes, senderAckNum);
+
+
+            // Increment counters
+            senderSeqNum += maxSegmentSize;
+            
+        }
 
         // File transferred so send out FIN -----------------------------------
+
+        senderNumBytes = 0;
 
         // System.err.println("Data transferred, so sending out FIN.");
 
@@ -154,7 +175,7 @@ public class Sender {
 
         // Receive server's FIN-ACK and send out ACK ------------------------------
         
-        receiveData = new byte[64];
+        receiveData = new byte[packetSize];
 
         receivePacket = new DatagramPacket(receiveData, receiveData.length);
         senderSocket.receive(receivePacket);
@@ -202,7 +223,7 @@ public class Sender {
 
         senderSocket.close();
         logStream.close();
-        // inFromFile.close();
+        inFromFile.close();
 		
 	} // end of main
 
