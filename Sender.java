@@ -2,9 +2,14 @@ import java.io.*;
 import java.net.*;
 
 public class Sender {
-    private static final int HEADERSIZE = 18;
+    // private static final int HEADERSIZE = 18;
 	public static void main(String[] args) throws Exception {
 
+        // Initialise seq and ack nums for logging.
+        int senderSeqNum = 121;
+        int senderNumBytes = 0;
+        int senderAckNum = 0;
+        int receiverNumBytes = 0;
 
 		// Define socket parameters, address and Port No
         InetAddress receiverHostIP = InetAddress.getByName(args[0]);
@@ -21,15 +26,18 @@ public class Sender {
         File senderLogFile = new File("Sender_log.txt");
         FileOutputStream logStream = new FileOutputStream(senderLogFile);
 		
+        // Record start time.
+        long start = System.nanoTime();
+
 		// Create socket, using any port, which connects to receiver
-		DatagramSocket clientSocket = new DatagramSocket(0);
+		DatagramSocket senderSocket = new DatagramSocket(0);
 
         // Send out SYN -------------------------------------------------------
 
         ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
         DataOutputStream dataOut = new DataOutputStream(byteOut);
-        dataOut.writeInt(0); // ISN
-        dataOut.writeInt(0); // ACK number
+        dataOut.writeInt(senderSeqNum); // ISN
+        dataOut.writeInt(senderAckNum); // ACK number
         dataOut.writeByte(0); // ACK flag
         dataOut.writeByte(1); // SYN flag
         dataOut.writeByte(0); // FIN flag
@@ -41,36 +49,45 @@ public class Sender {
         DatagramPacket synPacket = 
             new DatagramPacket(handshakeData, handshakeData.length, 
                 receiverHostIP, receiverPort);
-        clientSocket.send(synPacket);
+        senderSocket.send(synPacket);
+
+        Logger.logData(logStream, "snd", 
+            Helper.elapsedTimeInMillis(start, System.nanoTime()), "S", 
+            senderSeqNum, senderNumBytes, senderAckNum);
 
         // Receive SYN-ACK and send out ACK -----------------------------------
 
         byte[] receiveData = new byte[64];
 
-        DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
-        clientSocket.receive(receivePacket);
+        DatagramPacket receivePacket = 
+            new DatagramPacket(receiveData, receiveData.length);
+        senderSocket.receive(receivePacket);
 
         byte[] currBytes = receivePacket.getData();
         ByteArrayInputStream byteIn = new ByteArrayInputStream(currBytes);
         DataInputStream dataIn = new DataInputStream(byteIn);
-        int seqNum = dataIn.readInt();
-        int ackNum = dataIn.readInt();
-        int ackFlag = dataIn.readByte();
-        int synFlag = dataIn.readByte();
-        int finFlag = dataIn.readByte(); 
+        int receiverSeqNum = dataIn.readInt();
+        int receiverAckNum = dataIn.readInt();
+        int receiverAckFlag = dataIn.readByte();
+        int receiverSynFlag = dataIn.readByte();
+        int receiverFinFlag = dataIn.readByte();
         maxSegmentSize = dataIn.readInt();
         maxWindowSize = dataIn.readInt();
-        
-        // Helper.printHeader(seqNum, ackNum, ackFlag, synFlag, finFlag, 
-        //     maxSegmentSize, maxWindowSize);
 
-        if (synFlag == 1 && ackFlag == 1) {
-            System.err.println("Received SYN-ACK, so sending out ACK.");
+        // Update sender's seq number and ack number.
+        senderSeqNum = receiverAckNum;
+        senderAckNum = receiverSeqNum + 1;
+
+        if (receiverSynFlag == 1 && receiverAckFlag == 1) {
+            // System.err.println("Received SYN-ACK, so sending out ACK.");
+            Logger.logData(logStream, "rcv", 
+                Helper.elapsedTimeInMillis(start, System.nanoTime()), "SA", 
+                receiverSeqNum, receiverNumBytes, receiverAckNum);
 
             byteOut = new ByteArrayOutputStream();
             dataOut = new DataOutputStream(byteOut);
-            dataOut.writeInt(1); // Sequence number
-            dataOut.writeInt(0); // ACK number
+            dataOut.writeInt(senderSeqNum); // Sequence number
+            dataOut.writeInt(senderAckNum); // ACK number
             dataOut.writeByte(1); // ACK flag
             dataOut.writeByte(0); // SYN flag
             dataOut.writeByte(0); // FIN flag
@@ -81,7 +98,11 @@ public class Sender {
             DatagramPacket ackPacket = 
             new DatagramPacket(handshakeData, handshakeData.length, 
                 receiverHostIP, receiverPort);
-                clientSocket.send(ackPacket);
+            senderSocket.send(ackPacket);
+
+            Logger.logData(logStream, "snd", 
+                Helper.elapsedTimeInMillis(start, System.nanoTime()), "A", 
+                senderSeqNum, senderNumBytes, senderAckNum);
         }
 
         // Send out file ------------------------------------------------------
@@ -101,7 +122,7 @@ public class Sender {
         //         new DatagramPacket(sendData, sendData.length, 
         //         receiverHostIP, receiverPort);
         //     //actual send call
-        //     clientSocket.send(sendPacket);
+        //     senderSocket.send(sendPacket);
         //     String currLine = new String(sendData);
         //     System.err.print("Sent string " + i + ": " + currLine);
         //     i++;
@@ -109,12 +130,12 @@ public class Sender {
 
         // File transferred so send out FIN -----------------------------------
 
-        System.err.println("Data transferred, so sending out FIN.");
+        // System.err.println("Data transferred, so sending out FIN.");
 
         byteOut = new ByteArrayOutputStream();
         dataOut = new DataOutputStream(byteOut);
-        dataOut.writeInt(1); // Sequence number
-        dataOut.writeInt(0); // ACK number
+        dataOut.writeInt(senderSeqNum); // Sequence number
+        dataOut.writeInt(senderAckNum); // ACK number
         dataOut.writeByte(0); // ACK flag
         dataOut.writeByte(0); // SYN flag
         dataOut.writeByte(1); // FIN flag
@@ -125,57 +146,42 @@ public class Sender {
         DatagramPacket finPacket = 
         new DatagramPacket(handshakeData, handshakeData.length, 
             receiverHostIP, receiverPort);
-            clientSocket.send(finPacket);
+        senderSocket.send(finPacket);
+        Logger.logData(logStream, "snd", 
+            Helper.elapsedTimeInMillis(start, System.nanoTime()), "F", 
+            senderSeqNum, senderNumBytes, senderAckNum);
 
-        // Receive ACK and wait for server's FIN ------------------------------
 
-        receiveData = new byte[64];
-
-        receivePacket = new DatagramPacket(receiveData, receiveData.length);
-        clientSocket.receive(receivePacket);
-
-        currBytes = receivePacket.getData();
-        byteIn = new ByteArrayInputStream(currBytes);
-        dataIn = new DataInputStream(byteIn);
-        seqNum = dataIn.readInt();
-        ackNum = dataIn.readInt();
-        ackFlag = dataIn.readByte();
-        synFlag = dataIn.readByte();
-        finFlag = dataIn.readByte(); 
-        
-        // Helper.printHeader(seqNum, ackNum, ackFlag, synFlag, finFlag, 
-        //     maxSegmentSize, maxWindowSize);
-
-        if (ackFlag == 1) {
-            System.err.println("Received ACK so wait for server's FIN.");
-        }
-
-        // Receive server's FIN and send out ACK ------------------------------
+        // Receive server's FIN-ACK and send out ACK ------------------------------
         
         receiveData = new byte[64];
 
         receivePacket = new DatagramPacket(receiveData, receiveData.length);
-        clientSocket.receive(receivePacket);
+        senderSocket.receive(receivePacket);
 
         currBytes = receivePacket.getData();
         byteIn = new ByteArrayInputStream(currBytes);
         dataIn = new DataInputStream(byteIn);
-        seqNum = dataIn.readInt();
-        ackNum = dataIn.readInt();
-        ackFlag = dataIn.readByte();
-        synFlag = dataIn.readByte();
-        finFlag = dataIn.readByte(); 
-        
-        // Helper.printHeader(seqNum, ackNum, ackFlag, synFlag, finFlag, 
-        //     maxSegmentSize, maxWindowSize);
+        receiverSeqNum = dataIn.readInt();
+        receiverAckNum = dataIn.readInt();
+        receiverAckFlag = dataIn.readByte();
+        receiverSynFlag = dataIn.readByte();
+        receiverFinFlag = dataIn.readByte(); 
 
-        if (finFlag == 1) {
-            System.err.println("Received server's FIN so sending out ACK.");
+        // Update sender's seq number and ack number.
+        senderSeqNum = receiverAckNum;
+        senderAckNum = receiverSeqNum + 1;
+
+        if (receiverFinFlag == 1 && receiverAckFlag == 1) {
+            // System.err.println("Received server's FIN-ACK so sending out ACK.");
+            Logger.logData(logStream, "rcv", 
+                Helper.elapsedTimeInMillis(start, System.nanoTime()), "FA", 
+                receiverSeqNum, receiverNumBytes, receiverAckNum);
 
             byteOut = new ByteArrayOutputStream();
             dataOut = new DataOutputStream(byteOut);
-            dataOut.writeInt(2); // Sequence number
-            dataOut.writeInt(0); // ACK number
+            dataOut.writeInt(senderSeqNum); // Sequence number
+            dataOut.writeInt(senderAckNum); // ACK number
             dataOut.writeByte(1); // ACK flag
             dataOut.writeByte(0); // SYN flag
             dataOut.writeByte(0); // FIN flag
@@ -186,13 +192,15 @@ public class Sender {
             DatagramPacket ackPacket = 
             new DatagramPacket(handshakeData, handshakeData.length, 
                 receiverHostIP, receiverPort);
-                clientSocket.send(ackPacket);
+            senderSocket.send(ackPacket);
+            Logger.logData(logStream, "snd", 
+                Helper.elapsedTimeInMillis(start, System.nanoTime()), "A", 
+                senderSeqNum, senderNumBytes, senderAckNum);
         }
-
 
         // Close the socket ---------------------------------------------------
 
-        clientSocket.close();
+        senderSocket.close();
         logStream.close();
         // inFromFile.close();
 		

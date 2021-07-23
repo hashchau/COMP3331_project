@@ -13,6 +13,12 @@ public class Helper {
         );
     }
 
+    public static double elapsedTimeInMillis(long start, long current) {
+        long elapsedNanoSecs = current - start;
+        double elapsedMilliSecs = elapsedNanoSecs / 1000000.0;
+        return elapsedMilliSecs;
+    }
+
     // public static byte[] intToByteArray(int i) {
     //     ByteBuffer currBuffer = ByteBuffer.allocate(4);
     //     currBuffer.putInt(i);
