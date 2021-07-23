@@ -1,3 +1,5 @@
+import java.io.*;
+import java.net.*;
 
 public class Helper {
     public static void printHeader(int seqNum, int ackNum, int ackFlag, 
@@ -19,15 +21,19 @@ public class Helper {
         return elapsedMilliSecs;
     }
 
-    // public static byte[] intToByteArray(int i) {
-    //     ByteBuffer currBuffer = ByteBuffer.allocate(4);
-    //     currBuffer.putInt(i);
-    //     return currBuffer.array();
-    // }
+    public static byte[] makePacketBytes(int seqNum, int ackNum,
+        int ackFlag, int synFlag, int finFlag, int maxSegmentSize,
+        int maxWindowSize) throws IOException {
+            ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+            DataOutputStream dataOut = new DataOutputStream(byteOut);
+            dataOut.writeInt(seqNum); // ISN
+            dataOut.writeInt(ackNum); // ACK number
+            dataOut.writeByte(ackFlag); // ACK flag
+            dataOut.writeByte(synFlag); // SYN flag
+            dataOut.writeByte(finFlag); // FIN flag
+            dataOut.writeInt(maxSegmentSize); // MSS
+            dataOut.writeInt(maxWindowSize); // MWS
+            return byteOut.toByteArray();
+    }
 
-    // public static int byteArrayToInt(byte[] intBytes) {
-    //     ByteBuffer currBuffer = ByteBuffer.allocate(8);
-    //     currBuffer.put(intBytes);
-    //     return currBuffer.getInt();
-    // }
 }
