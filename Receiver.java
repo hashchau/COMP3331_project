@@ -51,7 +51,6 @@ public class Receiver {
 
         // Calculate packet size from given MSS and designed header size.
         int packetSize = headerSize + maxSegmentSize;
-        byte[] fileData = new byte[maxSegmentSize];
 
         receiverAckNum = senderSeqNum + 1;
 
@@ -101,6 +100,7 @@ public class Receiver {
 
         File fileReceived = new File(outputFilename);
         FileOutputStream outputStream = new FileOutputStream(fileReceived);
+
         while (true) {
 
             // Receive data and write to file.
@@ -111,6 +111,8 @@ public class Receiver {
 
             currBytes = receivePacket.getData();
 
+            System.err.println("receivePacket == " + receivePacket.getLength());
+
             byteIn = new ByteArrayInputStream(currBytes);
             dataIn = new DataInputStream(byteIn);
             senderSeqNum = dataIn.readInt();
@@ -120,7 +122,20 @@ public class Receiver {
             senderFinFlag = dataIn.readByte();
             maxSegmentSize = dataIn.readInt();
             maxWindowSize = dataIn.readInt();
-            fileData = dataIn.readNBytes(maxSegmentSize);
+
+
+            // byte[] fileData = dataIn.readNBytes(maxSegmentSize);
+            // int bytesRead = 19;
+            // int bytesToRead = maxSegmentSize + 19;
+            byte[] fileData = new byte[maxSegmentSize];
+            // while (bytesRead < bytesToRead) {
+            //     int result = dataIn.read(fileData, bytesRead, 
+            //         bytesToRead - bytesRead);
+            //     if (result == 1) {
+            //         break;
+            //     }
+            //     bytesRead += result;
+            // }
 
             System.err.println("fileData == " + fileData.length);
             dataIn.close();
@@ -137,21 +152,21 @@ public class Receiver {
             outputStream.write(fileData);
             receivePacket.setLength(receiveData.length);
 
-            // // Send ack back.
+            // Send ack back.
 
-            // receiverAckNum = senderSeqNum + fileData.length;
+            receiverAckNum = senderSeqNum + fileData.length;
 
-            // byte[] ackData = Helper.makePacketBytes(receiverSeqNum, 
-            //     receiverAckNum, 0, 0, 0, maxSegmentSize, maxWindowSize);
+            byte[] ackData = Helper.makePacketBytes(receiverSeqNum, 
+                receiverAckNum, 0, 0, 0, maxSegmentSize, maxWindowSize);
 
-            // DatagramPacket ackPacket = 
-            // new DatagramPacket(ackData, ackData.length, 
-            //     senderHostIP, senderPort);
-            // receiverSocket.send(ackPacket);
+            DatagramPacket ackPacket = 
+            new DatagramPacket(ackData, ackData.length, 
+                senderHostIP, senderPort);
+            receiverSocket.send(ackPacket);
 
-            // Logger.logData(logStream, "snd", 
-            //     Helper.elapsedTimeInMillis(start, System.nanoTime()), "A", 
-            //     receiverSeqNum, receiverNumBytes, receiverAckNum);
+            Logger.logData(logStream, "snd", 
+                Helper.elapsedTimeInMillis(start, System.nanoTime()), "A", 
+                receiverSeqNum, receiverNumBytes, receiverAckNum);
 
             
 		} // end of while (true)

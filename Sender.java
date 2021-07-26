@@ -129,21 +129,26 @@ public class Sender {
                 Helper.elapsedTimeInMillis(start, System.nanoTime()), "D", 
                 senderSeqNum, senderNumBytes, senderAckNum);
 
-            // // Receive ack.
-            // receivePacket = 
-            //     new DatagramPacket(receiveData, receiveData.length);
-            // senderSocket.receive(receivePacket);
+            // Receive ack.
 
-            // currBytes = receivePacket.getData();
-            // byteIn = new ByteArrayInputStream(currBytes);
-            // dataIn = new DataInputStream(byteIn);
-            // receiverSeqNum = dataIn.readInt();
-            // receiverAckNum = dataIn.readInt();
-            // receiverAckFlag = dataIn.readByte();
-            // receiverSynFlag = dataIn.readByte();
-            // receiverFinFlag = dataIn.readByte();
-            // maxSegmentSize = dataIn.readInt();
-            // maxWindowSize = dataIn.readInt();
+            receivePacket = 
+                new DatagramPacket(receiveData, receiveData.length);
+            senderSocket.receive(receivePacket);
+
+            currBytes = receivePacket.getData();
+            byteIn = new ByteArrayInputStream(currBytes);
+            dataIn = new DataInputStream(byteIn);
+            receiverSeqNum = dataIn.readInt();
+            receiverAckNum = dataIn.readInt();
+            receiverAckFlag = dataIn.readByte();
+            receiverSynFlag = dataIn.readByte();
+            receiverFinFlag = dataIn.readByte();
+            maxSegmentSize = dataIn.readInt();
+            maxWindowSize = dataIn.readInt();
+
+            Logger.logData(logStream, "rcv", 
+                Helper.elapsedTimeInMillis(start, System.nanoTime()), "A", 
+                receiverSeqNum, receiverNumBytes, receiverAckNum);
 
             senderSeqNum += bytesRead;
 
