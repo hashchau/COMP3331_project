@@ -102,6 +102,7 @@ public class Sender {
         int bytesRead;
 
         while ((bytesRead = inFromFile.read(fileData)) != -1) {
+            System.err.println("bytesRead == " + bytesRead);
 
             // Send out data.
             ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
@@ -113,7 +114,8 @@ public class Sender {
             dataOut.writeByte(0); // FIN flag
             dataOut.writeInt(maxSegmentSize); // MSS
             dataOut.writeInt(maxWindowSize); // MWS
-            dataOut.write(fileData);
+            dataOut.write(fileData, 0, bytesRead);
+
             System.err.println("fileData == " + fileData.length);
 
             byte[] sendData = byteOut.toByteArray();
@@ -125,6 +127,7 @@ public class Sender {
                 receiverHostIP, receiverPort);
             senderSocket.send(sendPacket);
 
+            senderNumBytes = bytesRead;
             Logger.logData(logStream, "snd", 
                 Helper.elapsedTimeInMillis(start, System.nanoTime()), "D", 
                 senderSeqNum, senderNumBytes, senderAckNum);
@@ -150,7 +153,7 @@ public class Sender {
                 Helper.elapsedTimeInMillis(start, System.nanoTime()), "A", 
                 receiverSeqNum, receiverNumBytes, receiverAckNum);
 
-            senderSeqNum += bytesRead;
+            senderSeqNum = receiverAckNum;
 
             // // Increment counters
             // if (receiverAckNum == (senderSeqNum + bytesRead)) {

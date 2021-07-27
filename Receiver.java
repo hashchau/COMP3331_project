@@ -4,6 +4,7 @@ import java.net.*;
 public class Receiver {
 
     private static final int headerSize = 19;
+    private static final int maxUDPDatagramSize = 65515;
 
 	public static void main(String[] args) throws Exception {
 
@@ -28,7 +29,7 @@ public class Receiver {
         
         // Receive SYN and send out SYN-ACK -----------------------------------
 
-        byte[] receiveData = new byte[headerSize];
+        byte[] receiveData = new byte[maxUDPDatagramSize];
 
         DatagramPacket receivePacket = 
             new DatagramPacket(receiveData, receiveData.length);
@@ -51,6 +52,9 @@ public class Receiver {
 
         // Calculate packet size from given MSS and designed header size.
         int packetSize = headerSize + maxSegmentSize;
+        
+        // Make data buffer for received packets the correct size. 
+        receiveData = new byte[packetSize];
 
         receiverAckNum = senderSeqNum + 1;
 
@@ -111,7 +115,7 @@ public class Receiver {
 
             currBytes = receivePacket.getData();
 
-            System.err.println("receivePacket == " + receivePacket.getLength());
+            System.err.println("currBytes == " + currBytes.length);
 
             byteIn = new ByteArrayInputStream(currBytes);
             dataIn = new DataInputStream(byteIn);
@@ -123,27 +127,18 @@ public class Receiver {
             maxSegmentSize = dataIn.readInt();
             maxWindowSize = dataIn.readInt();
 
+            byte[] fileData = dataIn.readNBytes(maxSegmentSize);
+            // byte[] fileData = new byte[maxSegmentSize];
+            // dataIn.readFully(fileData);
 
-            // byte[] fileData = dataIn.readNBytes(maxSegmentSize);
-            // int bytesRead = 19;
-            // int bytesToRead = maxSegmentSize + 19;
-            byte[] fileData = new byte[maxSegmentSize];
-            // while (bytesRead < bytesToRead) {
-            //     int result = dataIn.read(fileData, bytesRead, 
-            //         bytesToRead - bytesRead);
-            //     if (result == 1) {
-            //         break;
-            //     }
-            //     bytesRead += result;
-            // }
-
-            System.err.println("fileData == " + fileData.length);
             dataIn.close();
             byteIn.close();
 
             if (senderFinFlag == 1) {
                 break;
             }
+
+            senderNumBytes = fileData.length;
 
             Logger.logData(logStream, "rcv", 
                 Helper.elapsedTimeInMillis(start, System.nanoTime()), "D", 
@@ -164,6 +159,7 @@ public class Receiver {
                 senderHostIP, senderPort);
             receiverSocket.send(ackPacket);
 
+            receiverNumBytes = 0;
             Logger.logData(logStream, "snd", 
                 Helper.elapsedTimeInMillis(start, System.nanoTime()), "A", 
                 receiverSeqNum, receiverNumBytes, receiverAckNum);
@@ -175,6 +171,7 @@ public class Receiver {
 
         if (senderFinFlag == 1) {
 
+            senderNumBytes = 0;
             Logger.logData(logStream, "rcv", 
                 Helper.elapsedTimeInMillis(start, System.nanoTime()), "F", 
                 senderSeqNum, senderNumBytes, senderAckNum);
@@ -216,6 +213,7 @@ public class Receiver {
             Logger.logData(logStream, "rcv", 
                 Helper.elapsedTimeInMillis(start, System.nanoTime()), "A", 
                 senderSeqNum, senderNumBytes, senderAckNum);
+            
             outputStream.close();
             receiverSocket.close();
         }
