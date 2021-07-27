@@ -127,6 +127,8 @@ public class Sender {
                 receiverHostIP, receiverPort);
             senderSocket.send(sendPacket);
 
+            System.out.println("sendPacket == " + sendPacket.getLength());
+
             senderNumBytes = bytesRead;
             Logger.logData(logStream, "snd", 
                 Helper.elapsedTimeInMillis(start, System.nanoTime()), "D", 
