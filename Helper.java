@@ -1,5 +1,4 @@
 import java.io.*;
-import java.net.*;
 
 public class Helper {
     public static void printHeader(int seqNum, int ackNum, int ackFlag, 
@@ -35,5 +34,6 @@ public class Helper {
             dataOut.writeInt(maxWindowSize); // MWS
             return byteOut.toByteArray();
     }
+
 
 }

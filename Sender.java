@@ -1,5 +1,6 @@
 import java.io.*;
 import java.net.*;
+import java.util.*;
 
 public class Sender {
     private static final int headerSize = 19;
@@ -18,8 +19,8 @@ public class Sender {
         int maxWindowSize = Integer.parseInt(args[3]);
         int maxSegmentSize = Integer.parseInt(args[4]);
         double timeout = Double.parseDouble(args[5]);
-        double probabilityDrop = Double.parseDouble(args[6]);
-        double seed = Double.parseDouble(args[7]);
+        float probabilityDrop = Float.parseFloat(args[6]);
+        long seed = Long.parseLong(args[7]);
 
         // Calculate packet size from given MSS and designed header size.
         int packetSize = headerSize + maxSegmentSize;
@@ -118,9 +119,13 @@ public class Sender {
             byte[] sendData = byteOut.toByteArray();
             dataOut.close();
             byteOut.close();
-            
+
+            // Generate random number for dropping packets
+            Random random = new Random(seed);
+            float chosenFloat = random.nextFloat();
+
             DatagramPacket sendPacket = 
-                new DatagramPacket(sendData, sendData.length, 
+            new DatagramPacket(sendData, sendData.length, 
                 receiverHostIP, receiverPort);
             senderSocket.send(sendPacket);
 
@@ -128,6 +133,15 @@ public class Sender {
             Logger.logData(logStream, "snd", 
                 Helper.elapsedTimeInMillis(start, System.nanoTime()), "D", 
                 senderSeqNum, senderNumBytes, senderAckNum);
+
+            // if (chosenFloat > probabilityDrop) {
+
+            // } else {
+            //     senderNumBytes = bytesRead;
+            //     Logger.logData(logStream, "drop", 
+            //         Helper.elapsedTimeInMillis(start, System.nanoTime()), "D", 
+            //         senderSeqNum, senderNumBytes, senderAckNum);
+            // }
 
             // Receive ack.
 
