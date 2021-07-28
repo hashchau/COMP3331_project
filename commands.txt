@@ -1,2 +1,2 @@
 javac Receiver.java && java Receiver 5000 FileReceived.txt
-javac Sender.java && java Sender 127.0.0.1 5000 256KB.txt 640 64 100 0.5 50
+javac Sender.java && java Sender 127.0.0.1 5000 32KB.txt 640 64 100 0.5 50
