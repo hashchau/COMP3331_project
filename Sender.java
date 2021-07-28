@@ -181,12 +181,6 @@ public class Sender {
             maxSegmentSize = dataIn.readInt();
             maxWindowSize = dataIn.readInt();
 
-            // Logger.logData(logStream, "rcv", 
-            //     Helper.elapsedTimeInMillis(start, System.nanoTime()), "A", 
-            //     receiverSeqNum, receiverNumBytes, receiverAckNum);
-
-            // senderSeqNum = receiverAckNum;
-
             // Increment counters
             if (receiverAckNum == (senderSeqNum + bytesRead)) {
                 Logger.logData(logStream, "rcv", 
