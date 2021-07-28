@@ -113,8 +113,6 @@ public class Receiver {
                  new DatagramPacket(receiveData, receiveData.length);
             receiverSocket.receive(receivePacket);
 
-            System.out.println("receivePacket == " + receivePacket.getLength());
-
             currBytes = receivePacket.getData();
 
             byteIn = new ByteArrayInputStream(currBytes);
@@ -151,7 +149,7 @@ public class Receiver {
             receivePacket.setLength(receiveData.length);
 
             // Send ack back.
-
+            receiverSeqNum = senderAckNum;
             receiverAckNum = senderSeqNum + fileData.length;
 
             byte[] ackData = Helper.makePacketBytes(receiverSeqNum, 
@@ -161,7 +159,7 @@ public class Receiver {
             new DatagramPacket(ackData, ackData.length, 
                 senderHostIP, senderPort);
             receiverSocket.send(ackPacket);
-
+            
             receiverNumBytes = 0;
             Logger.logData(logStream, "snd", 
                 Helper.elapsedTimeInMillis(start, System.nanoTime()), "A", 

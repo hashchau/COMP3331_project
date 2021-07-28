@@ -102,7 +102,6 @@ public class Sender {
         int bytesRead;
 
         while ((bytesRead = inFromFile.read(fileData)) != -1) {
-            System.err.println("bytesRead == " + bytesRead);
 
             // Send out data.
             ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
@@ -116,8 +115,6 @@ public class Sender {
             dataOut.writeInt(maxWindowSize); // MWS
             dataOut.write(fileData, 0, bytesRead);
 
-            System.err.println("fileData == " + fileData.length);
-
             byte[] sendData = byteOut.toByteArray();
             dataOut.close();
             byteOut.close();
@@ -126,8 +123,6 @@ public class Sender {
                 new DatagramPacket(sendData, sendData.length, 
                 receiverHostIP, receiverPort);
             senderSocket.send(sendPacket);
-
-            System.out.println("sendPacket == " + sendPacket.getLength());
 
             senderNumBytes = bytesRead;
             Logger.logData(logStream, "snd", 
