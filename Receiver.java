@@ -113,9 +113,9 @@ public class Receiver {
                  new DatagramPacket(receiveData, receiveData.length);
             receiverSocket.receive(receivePacket);
 
-            currBytes = receivePacket.getData();
+            System.out.println("receivePacket == " + receivePacket.getLength());
 
-            System.err.println("currBytes == " + currBytes.length);
+            currBytes = receivePacket.getData();
 
             byteIn = new ByteArrayInputStream(currBytes);
             dataIn = new DataInputStream(byteIn);
@@ -127,9 +127,12 @@ public class Receiver {
             maxSegmentSize = dataIn.readInt();
             maxWindowSize = dataIn.readInt();
 
-            byte[] fileData = dataIn.readNBytes(maxSegmentSize);
-            // byte[] fileData = new byte[maxSegmentSize];
-            // dataIn.readFully(fileData);
+            // Get the number of bytes of data in the received packet.
+            // This specific number will prevent readNBytes from reading more
+            // data from the packet than the packet actually has - a weird bug.
+            int dataSize = receivePacket.getLength() - headerSize;
+
+            byte[] fileData = dataIn.readNBytes(dataSize);
 
             dataIn.close();
             byteIn.close();
