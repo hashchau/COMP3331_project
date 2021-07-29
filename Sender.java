@@ -123,46 +123,46 @@ public class Sender {
             dataOut.close();
             byteOut.close();
 
-            // DatagramPacket sendPacket = 
-            // new DatagramPacket(sendData, sendData.length, 
-            //     receiverHostIP, receiverPort);
-            // senderSocket.send(sendPacket);
+            DatagramPacket sendPacket = 
+            new DatagramPacket(sendData, sendData.length, 
+                receiverHostIP, receiverPort);
+            senderSocket.send(sendPacket);
 
-            // senderNumBytes = bytesRead;
-            // Logger.logData(logStream, "snd", 
-            //     Helper.elapsedTimeInMillis(start, System.nanoTime()), "D", 
-            //     senderSeqNum, senderNumBytes, senderAckNum);
+            senderNumBytes = bytesRead;
+            Logger.logData(logStream, "snd", 
+                Helper.elapsedTimeInMillis(start, System.nanoTime()), "D", 
+                senderSeqNum, senderNumBytes, senderAckNum);
 
-            // float chosenFloat;
-            if (random.nextFloat() > probabilityDrop) {
-                DatagramPacket sendPacket = 
-                new DatagramPacket(sendData, sendData.length, 
-                    receiverHostIP, receiverPort);
-                senderSocket.send(sendPacket);
+            // Drop packets with PL module
+            // if (random.nextFloat() > probabilityDrop) {
+            //     DatagramPacket sendPacket = 
+            //     new DatagramPacket(sendData, sendData.length, 
+            //         receiverHostIP, receiverPort);
+            //     senderSocket.send(sendPacket);
     
-                senderNumBytes = bytesRead;
-                Logger.logData(logStream, "snd", 
-                    Helper.elapsedTimeInMillis(start, System.nanoTime()), "D", 
-                    senderSeqNum, senderNumBytes, senderAckNum);
+            //     senderNumBytes = bytesRead;
+            //     Logger.logData(logStream, "snd", 
+            //         Helper.elapsedTimeInMillis(start, System.nanoTime()), "D", 
+            //         senderSeqNum, senderNumBytes, senderAckNum);
 
-            } else {
-                senderNumBytes = bytesRead;
-                long timerStart = System.nanoTime();
-                Logger.logData(logStream, "drop", 
-                    Helper.elapsedTimeInMillis(start, timerStart), "D", 
-                    senderSeqNum, senderNumBytes, senderAckNum);
-                while (Helper.elapsedTimeInMillis(timerStart, System.nanoTime()) < timeout) {
-                }
-                DatagramPacket sendPacket = 
-                new DatagramPacket(sendData, sendData.length, 
-                    receiverHostIP, receiverPort);
-                senderSocket.send(sendPacket);
+            // } else {
+            //     senderNumBytes = bytesRead;
+            //     long timerStart = System.nanoTime();
+            //     Logger.logData(logStream, "drop", 
+            //         Helper.elapsedTimeInMillis(start, timerStart), "D", 
+            //         senderSeqNum, senderNumBytes, senderAckNum);
+            //     while (Helper.elapsedTimeInMillis(timerStart, System.nanoTime()) < timeout) {
+            //     }
+            //     DatagramPacket sendPacket = 
+            //     new DatagramPacket(sendData, sendData.length, 
+            //         receiverHostIP, receiverPort);
+            //     senderSocket.send(sendPacket);
     
-                senderNumBytes = bytesRead;
-                Logger.logData(logStream, "snd", 
-                    Helper.elapsedTimeInMillis(start, System.nanoTime()), "D", 
-                    senderSeqNum, senderNumBytes, senderAckNum);
-            }
+            //     senderNumBytes = bytesRead;
+            //     Logger.logData(logStream, "snd", 
+            //         Helper.elapsedTimeInMillis(start, System.nanoTime()), "D", 
+            //         senderSeqNum, senderNumBytes, senderAckNum);
+            // }
 
             // Receive ack.
 
