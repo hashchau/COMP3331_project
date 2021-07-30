@@ -3,7 +3,7 @@ import java.net.*;
 import java.util.*;
 import java.util.concurrent.locks.*;
 
-public class Sender {
+public class SenderCopyWithGlobals {
     private static final int headerSize = 19;
 	public static void main(String[] args) throws Exception {
 
@@ -35,13 +35,6 @@ public class Sender {
 
 		// Create socket, using any port, which connects to receiver
 		Globals.senderSocket = new DatagramSocket(0);
-
-        try {
-            Globals.senderSocket.setSoTimeout(Globals.SOCKET_TIMEOUT);
-        } catch (SocketException e) {
-            // Do nothing.
-        }
-        
 
         // Send out SYN -------------------------------------------------------
 
@@ -115,17 +108,95 @@ public class Sender {
         // Generate random number for dropping packets
         Random random = new Random(Globals.seed);
 
-        SenderSendThread sst = new SenderSendThread();
-        Thread sendingThread = new Thread(sst); 
-        SenderReceiveThread srt = new SenderReceiveThread();
-        Thread receivingThread = new Thread(srt);
+        while ((Globals.bytesRead = Globals.inFromFile.read(Globals.fileData)) != -1) {
 
-        sendingThread.start();
-        receivingThread.start();
+            Globals.sumBytesRead += Globals.bytesRead;
 
-        sendingThread.join();
-        receivingThread.join();
+            // Send out data.
+            ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+            DataOutputStream dataOut = new DataOutputStream(byteOut);
+            dataOut.writeInt(Globals.senderSeqNum); // Sequence number
+            dataOut.writeInt(Globals.senderAckNum); // ACK number
+            dataOut.writeByte(0); // ACK flag
+            dataOut.writeByte(0); // SYN flag
+            dataOut.writeByte(0); // FIN flag
+            dataOut.writeInt(Globals.maxSegmentSize); // MSS
+            dataOut.writeInt(Globals.maxWindowSize); // MWS
+            dataOut.write(Globals.fileData, 0, Globals.bytesRead);
 
+            byte[] sendData = byteOut.toByteArray();
+            dataOut.close();
+            byteOut.close();
+
+            DatagramPacket sendPacket = 
+            new DatagramPacket(sendData, sendData.length, 
+                Globals.receiverHostIP, Globals.receiverPort);
+            Globals.senderSocket.send(sendPacket);
+
+            Globals.senderNumBytes = Globals.bytesRead;
+            Logger.logData(Globals.logStream, "snd", 
+                Helper.elapsedTimeInMillis(Globals.start, System.nanoTime()), "D", 
+                Globals.senderSeqNum, Globals.senderNumBytes, Globals.senderAckNum);
+
+            // Drop packets with PL module
+            // if (random.nextFloat() > Globals.probabilityDrop) {
+            //     DatagramPacket sendPacket = 
+            //     new DatagramPacket(sendData, sendData.length, 
+            //         Globals.receiverHostIP, Globals.receiverPort);
+            //     Globals.senderSocket.send(sendPacket);
+    
+            //     Globals.senderNumBytes = Globals.Globals.bytesRead;
+            //     Logger.logData(Globals.logStream, "snd", 
+            //         Helper.elapsedTimeInMillis(Globals.start, System.nanoTime()), "D", 
+            //         Globals.senderSeqNum, Globals.senderNumBytes, Globals.senderAckNum);
+
+            // } else {
+            //     Globals.senderNumBytes = Globals.bytesRead;
+            //     long timerStart = System.nanoTime();
+            //     Logger.logData(Globals.logStream, "drop", 
+            //         Helper.elapsedTimeInMillis(Globals.start, timerStart), "D", 
+            //         Globals.senderSeqNum, Globals.senderNumBytes, Globals.senderAckNum);
+            //     while (Helper.elapsedTimeInMillis(timerStart, System.nanoTime()) < Globals.timeout) {
+            //     }
+            //     DatagramPacket sendPacket = 
+            //     new DatagramPacket(sendData, sendData.length, 
+            //         Globals.receiverHostIP, Globals.receiverPort);
+            //     Globals.senderSocket.send(sendPacket);
+    
+            //     Globals.senderNumBytes = Globals.bytesRead;
+            //     Logger.logData(Globals.logStream, "snd", 
+            //         Helper.elapsedTimeInMillis(Globals.start, System.nanoTime()), "D", 
+            //         Globals.senderSeqNum, Globals.senderNumBytes, Globals.senderAckNum);
+            // }
+
+            // Receive ack.
+
+            receivePacket = 
+                new DatagramPacket(receiveData, receiveData.length);
+            Globals.senderSocket.receive(receivePacket);
+
+            currBytes = receivePacket.getData();
+            byteIn = new ByteArrayInputStream(currBytes);
+            dataIn = new DataInputStream(byteIn);
+            Globals.receiverSeqNum = dataIn.readInt();
+            Globals.receiverAckNum = dataIn.readInt();
+            receiverAckFlag = dataIn.readByte();
+            receiverSynFlag = dataIn.readByte();
+            receiverFinFlag = dataIn.readByte();
+            Globals.maxSegmentSize = dataIn.readInt();
+            Globals.maxWindowSize = dataIn.readInt();
+
+            // Increment counters
+            if (Globals.receiverAckNum == (Globals.senderSeqNum + Globals.bytesRead)) {
+                Logger.logData(Globals.logStream, "rcv", 
+                Helper.elapsedTimeInMillis(Globals.start, System.nanoTime()), "A", 
+                    Globals.receiverSeqNum, Globals.receiverNumBytes, Globals.receiverAckNum);
+                Globals.senderSeqNum = Globals.receiverAckNum;
+            }
+
+            Globals.isAckReceived = true;
+            
+        }
 
         // File transferred so send out FIN -----------------------------------
 
@@ -144,17 +215,11 @@ public class Sender {
 
 
         // Receive server's FIN-ACK and send out ACK ------------------------------
-
-
+        
         receiveData = new byte[packetSize];
 
         receivePacket = new DatagramPacket(receiveData, receiveData.length);
-
-        Globals.senderSocket.setSoTimeout(0);
-
         Globals.senderSocket.receive(receivePacket);
-
-        // System.err.println("FIN-ACK packet is this long: " + receivePacket.getLength());
 
         currBytes = receivePacket.getData();
         byteIn = new ByteArrayInputStream(currBytes);
@@ -168,9 +233,6 @@ public class Sender {
         // Update sender's seq number and ack number.
         Globals.senderSeqNum = Globals.receiverAckNum;
         Globals.senderAckNum = Globals.receiverSeqNum + 1;
-
-        System.err.println("FIN == " + receiverFinFlag);
-        System.err.println("ACK == " + receiverAckFlag);
 
         if (receiverFinFlag == 1 && receiverAckFlag == 1) {
             // System.err.println("Received server's FIN-ACK so sending out ACK.");
@@ -195,7 +257,7 @@ public class Sender {
         Globals.senderSocket.close();
         Globals.logStream.close();
         Globals.inFromFile.close();
-
+		
 	} // end of main
 
 } // end of class Sender

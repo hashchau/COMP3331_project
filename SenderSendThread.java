@@ -1,77 +1,74 @@
 import java.io.*;
 import java.util.*;
 import java.net.*;
+import java.util.concurrent.locks.*;
 
-public class SenderSendThread implements Runnable {
-    private InetAddress receiverHostIP;
-    private int receiverPort;
-    private DatagramSocket senderSocket;
-    private FileInputStream inFromFile;
-    private byte[] fileData;
-    private FileOutputStream logStream;
-    private long start;
-    private int senderNumBytes;
-    private int bytesRead;
-    private int senderSeqNum;
-    private int senderAckNum;
-    private int maxSegmentSize;
-    private int maxWindowSize;
-
-
-    public SenderSendThread(InetAddress receiverHostIP, int receiverPort, 
-        DatagramSocket senderSocket, FileInputStream inFromFile, 
-        byte[] fileData, FileOutputStream logStream, long start, 
-        int senderNumBytes, int bytesRead, int senderSeqNum, int senderAckNum, 
-        int maxSegmentSize, int maxWindowSize) {
-        this.receiverHostIP = receiverHostIP;
-        this.receiverPort = receiverPort;
-        this.senderSocket = senderSocket;
-        this.inFromFile = inFromFile;
-        this.fileData = fileData;
-        this.logStream = logStream;
-        this.start = start;
-        this.senderNumBytes = senderNumBytes;
-        this.bytesRead = bytesRead;
-        this.senderSeqNum = senderSeqNum;
-        this.senderAckNum = senderAckNum;
-        this.maxSegmentSize = maxSegmentSize;
-        this.maxWindowSize = maxWindowSize;
-    }
-    
+public class SenderSendThread implements Runnable {   
 
     @Override
     public void run() {
-        try {
-            while ((bytesRead = inFromFile.read(fileData)) != -1)  {
+        while (true) {
 
-                ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
-                DataOutputStream dataOut = new DataOutputStream(byteOut);
-                dataOut.writeInt(senderSeqNum); // Sequence number
-                dataOut.writeInt(senderAckNum); // ACK number
-                dataOut.writeByte(0); // ACK flag
-                dataOut.writeByte(0); // SYN flag
-                dataOut.writeByte(0); // FIN flag
-                dataOut.writeInt(maxSegmentSize); // MSS
-                dataOut.writeInt(maxWindowSize); // MWS
-                dataOut.write(fileData, 0, bytesRead);
+            Globals.syncLock.lock();
 
-                byte[] sendData = byteOut.toByteArray();
-                dataOut.close();
-                byteOut.close();
+            System.err.println("Start of SST.");
 
-                DatagramPacket sendPacket = 
-                new DatagramPacket(sendData, sendData.length, 
-                    receiverHostIP, receiverPort);
-                senderSocket.send(sendPacket);
+            if (Globals.isConnected == true) {
+                if (Globals.sumBytesRead >= Globals.fileToSend.length()) {
+                    Globals.syncLock.unlock();
+                    return;
+                } else if (Globals.isAckReceived == true) {
+                    try {
+                        Globals.bytesRead = Globals.inFromFile.read(Globals.fileData);
+                        Globals.sumBytesRead += Globals.bytesRead;
 
-                senderNumBytes = bytesRead;
-                Logger.logData(logStream, "snd", 
-                    Helper.elapsedTimeInMillis(start, System.nanoTime()), "D", 
-                    senderSeqNum, senderNumBytes, senderAckNum);
+                        // Send out data.
+                        ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+                        DataOutputStream dataOut = new DataOutputStream(byteOut);
+                        dataOut.writeInt(Globals.senderSeqNum); // Sequence number
+                        dataOut.writeInt(Globals.senderAckNum); // ACK number
+                        dataOut.writeByte(0); // ACK flag
+                        dataOut.writeByte(0); // SYN flag
+                        dataOut.writeByte(0); // FIN flag
+                        dataOut.writeInt(Globals.maxSegmentSize); // MSS
+                        dataOut.writeInt(Globals.maxWindowSize); // MWS
+                        dataOut.write(Globals.fileData, 0, Globals.bytesRead);
 
+                        byte[] sendData = byteOut.toByteArray();
+                        dataOut.close();
+                        byteOut.close();      
+
+                        DatagramPacket sendPacket = 
+                        new DatagramPacket(sendData, sendData.length, 
+                            Globals.receiverHostIP, Globals.receiverPort);
+                        Globals.senderSocket.send(sendPacket);
+            
+                        Globals.senderNumBytes = Globals.bytesRead;
+                        Logger.logData(Globals.logStream, "snd", 
+                            Helper.elapsedTimeInMillis(Globals.start, System.nanoTime()), "D", 
+                            Globals.senderSeqNum, Globals.senderNumBytes, Globals.senderAckNum);
+
+                        Globals.isAckReceived = false;      
+                        Globals.expectedAckNum = Globals.senderSeqNum + Globals.bytesRead;                  
+                        
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+
+            System.err.println("End of SST.");
+
+            Globals.syncLock.unlock();
+
+            try {
+                Thread.sleep(Globals.UPDATE_INTERVAL);
+            } catch (InterruptedException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+
+            
         }
     }
 }

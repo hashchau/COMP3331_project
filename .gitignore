@@ -3,3 +3,6 @@ Sender.class
 Helper.class
 Logger.class
 FileReceived.txt
+Globals.class
+SenderReceiveThread.class
+SenderSendThread.class
