@@ -38,7 +38,6 @@ public class SenderReceiveThread implements Runnable {
                     return;
                 }
             } catch (IOException e) {
-                // e.printStackTrace();
                 // do nothing
             }
 

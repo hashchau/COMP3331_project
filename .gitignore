@@ -6,3 +6,4 @@ FileReceived.txt
 Globals.class
 SenderReceiveThread.class
 SenderSendThread.class
+Packet.class

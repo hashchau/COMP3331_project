@@ -64,12 +64,12 @@ public class Helper {
         
     }
 
-    public static void logSend() {
+    public static void logSend(int seqNum, int numBytes, int ackNum) {
         Globals.senderNumBytes = Globals.bytesRead;
                     
         Logger.logData(Globals.logStream, "snd", 
             Helper.elapsedTimeInMillis(Globals.start, System.nanoTime()), "D", 
-            Globals.senderSeqNum, Globals.senderNumBytes, Globals.senderAckNum);
+            seqNum, numBytes, ackNum);
     }
 
     public static boolean isPacketDropped() {

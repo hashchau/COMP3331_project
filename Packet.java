@@ -1,5 +1,6 @@
 import java.io.*;
 import java.util.*;
+
 import java.net.*;
 
 public class Packet {
@@ -24,7 +25,7 @@ public class Packet {
         this.data = data;
     }
 
-    private void getData() throws IOException {
+    public void getData() throws IOException {
 
         Globals.bytesRead = Globals.inFromFile.read(Globals.fileData);
 
@@ -44,11 +45,76 @@ public class Packet {
         Globals.sumBytesRead += Globals.bytesRead;
     }
 
-    private DatagramPacket createDatagramPacket() {
+    public DatagramPacket createDatagramPacket() {
         DatagramPacket sendPacket = 
         new DatagramPacket(this.data, this.data.length, 
             Globals.receiverHostIP, Globals.receiverPort);
         return sendPacket;
     }
+
+    public int getDataLength() {
+        return (this.data.length - Globals.HEADER_SIZE);
+    }
+
+
+    public int getSeqNum() {
+        return this.seqNum;
+    }
+
+    public void setSeqNum(int seqNum) {
+        this.seqNum = seqNum;
+    }
+
+    public int getAckNum() {
+        return this.ackNum;
+    }
+
+    public void setAckNum(int ackNum) {
+        this.ackNum = ackNum;
+    }
+
+    public int getAckFlag() {
+        return this.ackFlag;
+    }
+
+    public void setAckFlag(int ackFlag) {
+        this.ackFlag = ackFlag;
+    }
+
+    public int getSynFlag() {
+        return this.synFlag;
+    }
+
+    public void setSynFlag(int synFlag) {
+        this.synFlag = synFlag;
+    }
+
+    public int getFinFlag() {
+        return this.finFlag;
+    }
+
+    public void setFinFlag(int finFlag) {
+        this.finFlag = finFlag;
+    }
+
+    public int getMaxSegmentSize() {
+        return this.maxSegmentSize;
+    }
+
+    public void setMaxSegmentSize(int maxSegmentSize) {
+        this.maxSegmentSize = maxSegmentSize;
+    }
+
+    public int getMaxWindowSize() {
+        return this.maxWindowSize;
+    }
+
+    public void setMaxWindowSize(int maxWindowSize) {
+        this.maxWindowSize = maxWindowSize;
+    }
+    public void setData(byte[] data) {
+        this.data = data;
+    }
+
 
 }

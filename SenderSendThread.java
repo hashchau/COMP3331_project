@@ -16,9 +16,21 @@ public class SenderSendThread implements Runnable {
                 return;
             } else if (Globals.isAckReceived == true) {
                 try {
-                    DatagramPacket currPacket = Helper.createDataPacket();
-                    Globals.senderSocket.send(currPacket);
-                    Helper.logSend();
+                    Packet currPacket = new Packet(Globals.senderSeqNum, 
+                        Globals.senderAckNum, 0, 0, 0, Globals.maxSegmentSize, 
+                        Globals.maxWindowSize, null);
+                    currPacket.getData();
+
+                    // Globals.sendBuffer.addPacket(currPacket);
+
+                    DatagramPacket sendPacket = currPacket.createDatagramPacket();
+                    Globals.timerStart = System.nanoTime();
+                    Globals.senderSocket.send(sendPacket);
+                    Helper.logSend(
+                        currPacket.getSeqNum(),
+                        currPacket.getDataLength(),
+                        currPacket.getAckNum()
+                    );
                     Globals.isAckReceived = false;      
                     Globals.expectedAckNum = Globals.senderSeqNum + Globals.bytesRead;                  
                     
