@@ -10,17 +10,12 @@ public class SenderReceiveThread implements Runnable {
 
             Globals.syncLock.lock();
 
-            System.err.println("Start of SRT.");
-
             int packetSize = Globals.headerSize + Globals.maxSegmentSize;
             byte[] receiveData = new byte[packetSize];
             DatagramPacket receivePacket = 
             new DatagramPacket(receiveData, receiveData.length);
             try {
-                // Globals.syncLock.lock();
-                // System.err.println("Before receive.");
                 Globals.senderSocket.receive(receivePacket);
-                // System.err.println("After receive.");
                 byte[] currBytes = receivePacket.getData();
                 ByteArrayInputStream byteIn = new ByteArrayInputStream(currBytes);
                 DataInputStream dataIn = new DataInputStream(byteIn);
@@ -31,24 +26,21 @@ public class SenderReceiveThread implements Runnable {
                 int receiverFinFlag = dataIn.readByte();
                 Globals.maxSegmentSize = dataIn.readInt();
                 Globals.maxWindowSize = dataIn.readInt();
+                Logger.logData(Globals.logStream, "rcv", 
+                Helper.elapsedTimeInMillis(Globals.start, System.nanoTime()), "A", 
+                    Globals.receiverSeqNum, Globals.receiverNumBytes, Globals.receiverAckNum);
+                Globals.senderSeqNum = Globals.receiverAckNum;
+    
+                Globals.isAckReceived = true;
+    
+                if (Globals.receiverAckNum >= (Globals.fileToSend.length() + Globals.initSeqNum)) {
+                    Globals.syncLock.unlock();
+                    return;
+                }
             } catch (IOException e) {
-                e.printStackTrace();
+                // e.printStackTrace();
+                // do nothing
             }
-
-
-            Logger.logData(Globals.logStream, "rcv", 
-            Helper.elapsedTimeInMillis(Globals.start, System.nanoTime()), "A", 
-                Globals.receiverSeqNum, Globals.receiverNumBytes, Globals.receiverAckNum);
-            Globals.senderSeqNum = Globals.receiverAckNum;
-
-            Globals.isAckReceived = true;
-
-            if (Globals.receiverAckNum >= Globals.fileToSend.length()) {
-                Globals.syncLock.unlock();
-                return;
-            }
-
-            System.err.println("End of SRT.");
 
             Globals.syncLock.unlock();
 

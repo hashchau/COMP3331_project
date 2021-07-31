@@ -8,7 +8,8 @@ public class Sender {
 	public static void main(String[] args) throws Exception {
 
         // Initialise seq and ack nums for logging.
-        Globals.senderSeqNum = 121;
+
+        Globals.senderSeqNum = Globals.initSeqNum;
         Globals.senderAckNum = 0;
         Globals.senderNumBytes = 0;
         Globals.receiverNumBytes = 0;
@@ -168,9 +169,6 @@ public class Sender {
         // Update sender's seq number and ack number.
         Globals.senderSeqNum = Globals.receiverAckNum;
         Globals.senderAckNum = Globals.receiverSeqNum + 1;
-
-        System.err.println("FIN == " + receiverFinFlag);
-        System.err.println("ACK == " + receiverAckFlag);
 
         if (receiverFinFlag == 1 && receiverAckFlag == 1) {
             // System.err.println("Received server's FIN-ACK so sending out ACK.");

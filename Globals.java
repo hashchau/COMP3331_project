@@ -5,8 +5,8 @@ import java.net.*;
 
 public class Globals {
     // Constants
-    public static final long UPDATE_INTERVAL = 100;
-    public static final int SOCKET_TIMEOUT = 1000;
+    public static final long UPDATE_INTERVAL = 10;
+    public static final int SOCKET_TIMEOUT = 500;
 
     // Arg-related
     public static InetAddress receiverHostIP;
@@ -32,6 +32,7 @@ public class Globals {
     public static int senderNumBytes;
     public static int receiverNumBytes;
     public static int bytesRead;
+    public static int initSeqNum = 121;
     public static int senderSeqNum;
     public static int senderAckNum;
     public static int receiverSeqNum;

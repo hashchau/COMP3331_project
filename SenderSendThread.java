@@ -11,8 +11,6 @@ public class SenderSendThread implements Runnable {
 
             Globals.syncLock.lock();
 
-            System.err.println("Start of SST.");
-
             if (Globals.isConnected == true) {
                 if (Globals.sumBytesRead >= Globals.fileToSend.length()) {
                     Globals.syncLock.unlock();
@@ -56,8 +54,6 @@ public class SenderSendThread implements Runnable {
                     }
                 }
             }
-
-            System.err.println("End of SST.");
 
             Globals.syncLock.unlock();
 
