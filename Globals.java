@@ -27,6 +27,7 @@ public class Globals {
     public static FileOutputStream logStream;
     public static long start;
     public static ReentrantLock syncLock = new ReentrantLock();
+    public static ArrayList<DatagramPacket> packetWindow = new ArrayList<>();
     // Packet-related
 
     public static int senderNumBytes;
@@ -43,5 +44,6 @@ public class Globals {
     public static int sumBytesRead = 0;
     public static boolean isConnected = false;
     public static boolean isAckReceived = true;
+    public static Random randomGen;
     // public static boolean fileSent = false;
 }

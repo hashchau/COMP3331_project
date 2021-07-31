@@ -1,4 +1,6 @@
 import java.io.*;
+import java.util.*;
+import java.net.*;
 
 public class Helper {
     public static void printHeader(int seqNum, int ackNum, int ackFlag, 
@@ -35,5 +37,47 @@ public class Helper {
             return byteOut.toByteArray();
     }
 
+
+    public static DatagramPacket createDataPacket() throws IOException {
+        Globals.bytesRead = Globals.inFromFile.read(Globals.fileData);
+
+        ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+        DataOutputStream dataOut = new DataOutputStream(byteOut);
+        dataOut.writeInt(Globals.senderSeqNum); // Sequence number
+        dataOut.writeInt(Globals.senderAckNum); // ACK number
+        dataOut.writeByte(0); // ACK flag
+        dataOut.writeByte(0); // SYN flag
+        dataOut.writeByte(0); // FIN flag
+        dataOut.writeInt(Globals.maxSegmentSize); // MSS
+        dataOut.writeInt(Globals.maxWindowSize); // MWS
+        dataOut.write(Globals.fileData, 0, Globals.bytesRead);
+
+        byte[] sendData = byteOut.toByteArray();
+
+        Globals.sumBytesRead += Globals.bytesRead;
+
+        DatagramPacket sendPacket = 
+        new DatagramPacket(sendData, sendData.length, 
+            Globals.receiverHostIP, Globals.receiverPort);
+
+        return sendPacket;
+        
+    }
+
+    public static void logSend() {
+        Globals.senderNumBytes = Globals.bytesRead;
+                    
+        Logger.logData(Globals.logStream, "snd", 
+            Helper.elapsedTimeInMillis(Globals.start, System.nanoTime()), "D", 
+            Globals.senderSeqNum, Globals.senderNumBytes, Globals.senderAckNum);
+    }
+
+    public static boolean isPacketDropped() {
+        if (Globals.randomGen.nextFloat() > Globals.probabilityDrop) {
+            return false;
+        } else {
+            return true;
+        }
+    } 
 
 }

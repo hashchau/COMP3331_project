@@ -102,7 +102,7 @@ public class SenderCopy {
         senderNumBytes = maxSegmentSize;
         int bytesRead;
 
-        // Generate random number for dropping packets
+        // Generate random number object for dropping packets
         Random random = new Random(seed);
 
         while ((bytesRead = inFromFile.read(fileData)) != -1) {

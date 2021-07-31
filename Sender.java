@@ -100,9 +100,10 @@ public class Sender {
                 Globals.senderSeqNum, Globals.senderNumBytes, Globals.senderAckNum);
         }
 
-        Globals.isConnected = true;
-
         // SEND OUT FILE ------------------------------------------------------
+
+        // Generate random number for dropping packets
+        Globals.randomGen = new Random(Globals.seed);
 
         // get input from file
         Globals.fileToSend = new File(Globals.filename);
@@ -112,9 +113,6 @@ public class Sender {
         Globals.fileData = new byte[Globals.maxSegmentSize];
         Globals.senderNumBytes = Globals.maxSegmentSize;
         // int Globals.bytesRead;
-
-        // Generate random number for dropping packets
-        Random random = new Random(Globals.seed);
 
         SenderSendThread sst = new SenderSendThread();
         Thread sendingThread = new Thread(sst); 
