@@ -48,7 +48,7 @@ public class Globals {
     public static Random randomGen;
     public static long timerStart;
     public static ArrayList<Packet> sendBuffer;
-    public static int lastAckNum;
+    public static int lastAckNum = 0;
     // public static int lastSeqNum;
     public static int numDupAcks = 0;
 }

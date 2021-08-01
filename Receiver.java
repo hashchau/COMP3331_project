@@ -15,6 +15,7 @@ public class Receiver {
         int receiverNumBytes = 0;
         int senderNumBytes = 0;
         int expectedSeqNum = 0;
+        boolean outOfOrder = false;
 
 		int receiverPort = Integer.parseInt(args[0]);
         String outputFilename = args[1];
@@ -155,22 +156,35 @@ public class Receiver {
                 currPacket.getSeqNum(), currPacket.getLength(), 
                 currPacket.getAckNum());
 
+            // if (currPacket.getSeqNum() == expectedSeqNum) {
+            //     currPacket.writeData(outputStream);
+            //     receiverAckNum += fileData.length;
+            //     if (outOfOrder == true) {
+            //         if (receiveBuffer.size() > 0) {
+            //             if (receiveBuffer.get(0).getSeqNum() == 
+            //                 (currPacket.getSeqNum() + currPacket.getLength())) {
+            //                 for (Packet bufferPacket: receiveBuffer) {
+            //                     bufferPacket.writeData(outputStream);
+            //                 }
+            //                 receiveBuffer = new ArrayList<>();
+            //                 outOfOrder = false;
+            //                 // TODO: create ack packet and send
+            //                 expectedSeqNum = receiverAckNum;
+            //             }
+            //         }
+            //     }
+            // }
+
+
             currPacket.writeData(outputStream);
+            receiverAckNum += fileData.length;
 
             // Send ACK back.
             receiverSeqNum = senderAckNum;
-            receiverAckNum = senderSeqNum + fileData.length;
 
             Packet responsePacket = new Packet(receiverSeqNum, receiverAckNum, 
             1, 0, 0, maxSegmentSize, maxWindowSize, null);
             responsePacket.getHeaders();
-
-            // byte[] ackData = Helper.makePacketBytes(receiverSeqNum, 
-            //     receiverAckNum, 0, 0, 0, maxSegmentSize, maxWindowSize);
-
-            // DatagramPacket ackPacket = 
-            // new DatagramPacket(ackData, ackData.length, 
-            //     senderHostIP, senderPort);
 
             DatagramPacket ackPacket = 
                 responsePacket.createAckPacket(senderHostIP, senderPort);

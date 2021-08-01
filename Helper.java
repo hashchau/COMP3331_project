@@ -89,5 +89,20 @@ public class Helper {
         }
     } 
 
+    public static void retransmit() throws IOException {
+        for (Packet currPacket : Globals.sendBuffer) {
+            if (currPacket.getSeqNum() == Globals.lastAckNum) {
+                Globals.timerStart = System.nanoTime();
+                DatagramPacket sendPacket = currPacket.createDatagramPacket();
+                // System.err.println("Resending dropped packet.");
+                Globals.senderSocket.send(sendPacket);
+                Helper.logSend(
+                    currPacket.getSeqNum(),
+                    currPacket.getDataLength(),
+                    currPacket.getAckNum()
+                );
+            }
+        }
+    }
 
 }

@@ -146,8 +146,6 @@ public class Sender {
             Helper.elapsedTimeInMillis(Globals.start, System.nanoTime()), "F", 
                 Globals.senderSeqNum, Globals.senderNumBytes, Globals.senderAckNum);
 
-        System.err.println("senderSeqNum == " + Globals.senderSeqNum);
-
 
         // Receive server's FIN-ACK and send out ACK ------------------------------
 
