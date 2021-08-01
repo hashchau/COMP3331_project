@@ -16,6 +16,7 @@ public class SenderReceiveThread implements Runnable {
             new DatagramPacket(receiveData, receiveData.length);
             try {
                 Globals.senderSocket.receive(receivePacket);
+
                 byte[] currBytes = receivePacket.getData();
                 ByteArrayInputStream byteIn = new ByteArrayInputStream(currBytes);
                 DataInputStream dataIn = new DataInputStream(byteIn);
@@ -26,14 +27,24 @@ public class SenderReceiveThread implements Runnable {
                 int receiverFinFlag = dataIn.readByte();
                 Globals.maxSegmentSize = dataIn.readInt();
                 Globals.maxWindowSize = dataIn.readInt();
+
+                Packet receivedPacket = new Packet(Globals.receiverSeqNum, 
+                    Globals.receiverAckNum, receiverAckFlag, receiverSynFlag, 
+                    receiverFinFlag, Globals.maxSegmentSize, 
+                    Globals.maxWindowSize, null);
+
                 Logger.logData(Globals.logStream, "rcv", 
                 Helper.elapsedTimeInMillis(Globals.start, System.nanoTime()), "A", 
-                    Globals.receiverSeqNum, Globals.receiverNumBytes, Globals.receiverAckNum);
-                Globals.senderSeqNum = Globals.receiverAckNum;
+                    receivedPacket.getSeqNum(), 0, receivedPacket.getAckNum());
+                
+                if (Globals.receiverAckNum >= (Globals.fileToSend.length() + 
+                    Globals.initSeqNum)) {
+                    Globals.syncLock.unlock();
+                    return;
+                }
     
                 Globals.isAckReceived = true;
-                Globals.lastAckNum = Globals.receiverAckNum;
-                // Globals.lastSeqNum = Globals.lastAckNum - Globals.maxSegmentSize;
+                Globals.lastAckNum = receivedPacket.getAckNum();
 
                 // Create a new buffer which only contains the packets that
                 // have not been acknowledged yet.
@@ -45,13 +56,12 @@ public class SenderReceiveThread implements Runnable {
                 }
                 Globals.sendBuffer = tempBuffer;
     
-                if (Globals.receiverAckNum >= (Globals.fileToSend.length() + Globals.initSeqNum)) {
-                    Globals.syncLock.unlock();
-                    return;
-                }
+
             } catch (IOException e) {
                 // do nothing
             }
+
+
 
             Globals.syncLock.unlock();
 

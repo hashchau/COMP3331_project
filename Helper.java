@@ -72,6 +72,7 @@ public class Helper {
             seqNum, numBytes, ackNum);
     }
 
+
     public static void logDrop(int seqNum, int numBytes, int ackNum) {
         Globals.senderNumBytes = Globals.bytesRead;
                     

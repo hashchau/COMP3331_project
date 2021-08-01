@@ -14,7 +14,8 @@ public class Packet {
     private int maxWindowSize;
     private byte[] data = null;
 
-    public Packet(int seqNum, int ackNum, int ackFlag, int synFlag, int finFlag, int maxSegmentSize, int maxWindowSize, byte[] data) {
+    public Packet(int seqNum, int ackNum, int ackFlag, int synFlag, int finFlag, 
+        int maxSegmentSize, int maxWindowSize, byte[] data) {
         this.seqNum = seqNum;
         this.ackNum = ackNum;
         this.ackFlag = ackFlag;
@@ -45,6 +46,22 @@ public class Packet {
         Globals.sumBytesRead += Globals.bytesRead;
     }
 
+    public void getHeaders() throws IOException {
+
+        ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+        DataOutputStream dataOut = new DataOutputStream(byteOut);
+        dataOut.writeInt(this.seqNum); // Sequence number
+        dataOut.writeInt(this.ackNum); // ACK number
+        dataOut.writeByte(this.ackFlag); // ACK flag
+        dataOut.writeByte(this.synFlag); // SYN flag
+        dataOut.writeByte(this.finFlag); // FIN flag
+        dataOut.writeInt(this.maxSegmentSize); // MSS
+        dataOut.writeInt(this.maxWindowSize); // MWS
+
+        this.data = byteOut.toByteArray();
+
+    }
+
     public DatagramPacket createDatagramPacket() {
         DatagramPacket sendPacket = 
         new DatagramPacket(this.data, this.data.length, 
@@ -52,8 +69,27 @@ public class Packet {
         return sendPacket;
     }
 
+    public DatagramPacket createAckPacket(InetAddress senderHostIP, int senderPort) {
+        DatagramPacket sendPacket = 
+        new DatagramPacket(this.data, this.data.length, 
+            senderHostIP, senderPort);
+        return sendPacket;
+    }
+
     public int getDataLength() {
         return (this.data.length - Globals.HEADER_SIZE);
+    }
+
+    public int getLength() {
+        return this.data.length;
+    }
+
+    public void writeData(FileOutputStream outputStream) {
+        try {
+            outputStream.write(this.data);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 

@@ -133,6 +133,8 @@ public class Sender {
 
         Globals.senderNumBytes = 0;
 
+        Globals.senderSeqNum = Globals.receiverAckNum;
+
         handshakeData = Helper.makePacketBytes(Globals.senderSeqNum, 
             Globals.senderAckNum, 0, 0, 1, Globals.maxSegmentSize, Globals.maxWindowSize);
 
@@ -143,6 +145,8 @@ public class Sender {
         Logger.logData(Globals.logStream, "snd", 
             Helper.elapsedTimeInMillis(Globals.start, System.nanoTime()), "F", 
                 Globals.senderSeqNum, Globals.senderNumBytes, Globals.senderAckNum);
+
+        System.err.println("senderSeqNum == " + Globals.senderSeqNum);
 
 
         // Receive server's FIN-ACK and send out ACK ------------------------------

@@ -17,7 +17,7 @@ public class SenderSendThread implements Runnable {
                     if (currPacket.getSeqNum() == Globals.lastAckNum) {
                         Globals.timerStart = System.nanoTime();
                         DatagramPacket sendPacket = currPacket.createDatagramPacket();
-                        System.err.println("Resending dropped packet.");
+                        // System.err.println("Resending dropped packet.");
                         Globals.senderSocket.send(sendPacket);
                         Helper.logSend(
                             currPacket.getSeqNum(),
@@ -57,29 +57,36 @@ public class SenderSendThread implements Runnable {
                     currPacket.getData();
                     // Add the packet to the buffer.
                     Globals.sendBuffer.add(currPacket);
+                    
+                    Globals.expectedAckNum = Globals.senderSeqNum + currPacket.getDataLength();
+                    Globals.senderSeqNum += currPacket.getDataLength();   
+
+                    System.err.println("Packets currently in buffer:");
+                    for (Packet bufferPacket : Globals.sendBuffer) {
+                        System.err.println(bufferPacket.getSeqNum());
+                    }
+
+                    Globals.timerStart = System.nanoTime();  
 
                     if (Helper.isPacketDropped() == true) {
-                        Globals.timerStart = System.nanoTime();    
                         // Don't send anything; just log the drop.
                         Helper.logDrop(
                             currPacket.getSeqNum(),
                             currPacket.getDataLength(),
                             currPacket.getAckNum()
                         );
-                        Globals.isAckReceived = false;
                     } else {
                         DatagramPacket sendPacket = currPacket.createDatagramPacket();
-                        Globals.timerStart = System.nanoTime();
                         Globals.senderSocket.send(sendPacket);
                         // Log the send.
                         Helper.logSend(
                             currPacket.getSeqNum(),
                             currPacket.getDataLength(),
                             currPacket.getAckNum()
-                        );
-                        Globals.isAckReceived = false;      
-                        Globals.expectedAckNum = Globals.senderSeqNum + Globals.bytesRead;                             
+                        );  
+                                             
                     }
+                    Globals.isAckReceived = false;
 
 
                 } catch (IOException e) {

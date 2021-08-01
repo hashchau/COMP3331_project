@@ -1,5 +1,6 @@
 import java.io.*;
 import java.net.*;
+import java.util.*;
 
 public class Receiver {
 
@@ -13,6 +14,7 @@ public class Receiver {
         int receiverAckNum = 0;
         int receiverNumBytes = 0;
         int senderNumBytes = 0;
+        int expectedSeqNum = 0;
 
 		int receiverPort = Integer.parseInt(args[0]);
         String outputFilename = args[1];
@@ -105,6 +107,9 @@ public class Receiver {
         File fileReceived = new File(outputFilename);
         FileOutputStream outputStream = new FileOutputStream(fileReceived);
 
+        // Create packet buffer for receiving data
+        ArrayList<Packet> receiveBuffer = new ArrayList<>();
+
         while (true) {
 
             // Receive data and write to file.
@@ -139,25 +144,37 @@ public class Receiver {
                 break;
             }
 
-            senderNumBytes = fileData.length;
+            Packet currPacket = new Packet(senderSeqNum, senderAckNum, 
+                senderAckFlag, senderSynFlag, senderFinFlag, maxSegmentSize, 
+                maxWindowSize, fileData);
+            
+            receiveBuffer.add(currPacket);
 
             Logger.logData(logStream, "rcv", 
                 Helper.elapsedTimeInMillis(start, System.nanoTime()), "D", 
-                senderSeqNum, senderNumBytes, senderAckNum);
+                currPacket.getSeqNum(), currPacket.getLength(), 
+                currPacket.getAckNum());
 
-            outputStream.write(fileData);
-            receivePacket.setLength(receiveData.length);
+            currPacket.writeData(outputStream);
 
-            // Send ack back.
+            // Send ACK back.
             receiverSeqNum = senderAckNum;
             receiverAckNum = senderSeqNum + fileData.length;
 
-            byte[] ackData = Helper.makePacketBytes(receiverSeqNum, 
-                receiverAckNum, 0, 0, 0, maxSegmentSize, maxWindowSize);
+            Packet responsePacket = new Packet(receiverSeqNum, receiverAckNum, 
+            1, 0, 0, maxSegmentSize, maxWindowSize, null);
+            responsePacket.getHeaders();
+
+            // byte[] ackData = Helper.makePacketBytes(receiverSeqNum, 
+            //     receiverAckNum, 0, 0, 0, maxSegmentSize, maxWindowSize);
+
+            // DatagramPacket ackPacket = 
+            // new DatagramPacket(ackData, ackData.length, 
+            //     senderHostIP, senderPort);
 
             DatagramPacket ackPacket = 
-            new DatagramPacket(ackData, ackData.length, 
-                senderHostIP, senderPort);
+                responsePacket.createAckPacket(senderHostIP, senderPort);
+
             receiverSocket.send(ackPacket);
             
             receiverNumBytes = 0;
@@ -165,6 +182,7 @@ public class Receiver {
                 Helper.elapsedTimeInMillis(start, System.nanoTime()), "A", 
                 receiverSeqNum, receiverNumBytes, receiverAckNum);
 
+            expectedSeqNum = receiverAckNum;
             
 		} // end of while (true)
 
