@@ -5,35 +5,83 @@ import java.util.concurrent.locks.*;
 
 public class SenderSendThread implements Runnable {   
 
+    public static void checkTimeout() throws IOException {
+        if (Globals.sendBuffer.size() > 0) {
+            double elapsedTime = Helper.elapsedTimeInMillis(Globals.timerStart, 
+                System.nanoTime());
+            if (elapsedTime > Globals.timeout) {
+                // Retransmit the packet with sequence number equal to the 
+                // last ACK number from the receiver because that's the packet
+                // that the receiver wants.
+                for (Packet currPacket : Globals.sendBuffer) {
+                    if (currPacket.getSeqNum() == Globals.lastAckNum) {
+                        Globals.timerStart = System.nanoTime();
+                        DatagramPacket sendPacket = currPacket.createDatagramPacket();
+                        System.err.println("Resending dropped packet.");
+                        Globals.senderSocket.send(sendPacket);
+                        Helper.logSend(
+                            currPacket.getSeqNum(),
+                            currPacket.getDataLength(),
+                            currPacket.getAckNum()
+                        );
+                    }
+                }
+            }
+        }
+    }
+
     @Override
     public void run() {
         while (true) {
 
             Globals.syncLock.lock();
 
+            try {
+                checkTimeout();
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
+
             if (Globals.sumBytesRead >= Globals.fileToSend.length()) {
                 Globals.syncLock.unlock();
                 return;
-            } else if (Globals.isAckReceived == true) {
+            } 
+            
+            if (Globals.isAckReceived == true) {
                 try {
+                    // Create a packet with filled header fields but no data.
                     Packet currPacket = new Packet(Globals.senderSeqNum, 
                         Globals.senderAckNum, 0, 0, 0, Globals.maxSegmentSize, 
                         Globals.maxWindowSize, null);
+                    // Read from input file and add data to packet.
                     currPacket.getData();
+                    // Add the packet to the buffer.
+                    Globals.sendBuffer.add(currPacket);
 
-                    // Globals.sendBuffer.addPacket(currPacket);
+                    if (Helper.isPacketDropped() == true) {
+                        Globals.timerStart = System.nanoTime();    
+                        // Don't send anything; just log the drop.
+                        Helper.logDrop(
+                            currPacket.getSeqNum(),
+                            currPacket.getDataLength(),
+                            currPacket.getAckNum()
+                        );
+                        Globals.isAckReceived = false;
+                    } else {
+                        DatagramPacket sendPacket = currPacket.createDatagramPacket();
+                        Globals.timerStart = System.nanoTime();
+                        Globals.senderSocket.send(sendPacket);
+                        // Log the send.
+                        Helper.logSend(
+                            currPacket.getSeqNum(),
+                            currPacket.getDataLength(),
+                            currPacket.getAckNum()
+                        );
+                        Globals.isAckReceived = false;      
+                        Globals.expectedAckNum = Globals.senderSeqNum + Globals.bytesRead;                             
+                    }
 
-                    DatagramPacket sendPacket = currPacket.createDatagramPacket();
-                    Globals.timerStart = System.nanoTime();
-                    Globals.senderSocket.send(sendPacket);
-                    Helper.logSend(
-                        currPacket.getSeqNum(),
-                        currPacket.getDataLength(),
-                        currPacket.getAckNum()
-                    );
-                    Globals.isAckReceived = false;      
-                    Globals.expectedAckNum = Globals.senderSeqNum + Globals.bytesRead;                  
-                    
+
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

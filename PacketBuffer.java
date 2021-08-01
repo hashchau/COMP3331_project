@@ -10,7 +10,6 @@ public class PacketBuffer {
         this.packetBuffer = new ArrayList<>();
     }
 
-
     public void addPacket(Packet currPacket) {
         this.packetBuffer.add(currPacket);
     }

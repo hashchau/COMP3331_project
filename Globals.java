@@ -41,11 +41,14 @@ public class Globals {
     public static int receiverAckNum;
 
     public static int expectedAckNum;
+    public static int expectedSeqNum;
     // Extra
     public static int sumBytesRead = 0;
     public static boolean isConnected = false;
     public static boolean isAckReceived = true;
     public static Random randomGen;
     public static long timerStart;
-    public static PacketBuffer sendBuffer;
+    public static ArrayList<Packet> sendBuffer;
+    public static int lastAckNum;
+    // public static int lastSeqNum;
 }

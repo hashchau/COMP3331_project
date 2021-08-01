@@ -32,6 +32,18 @@ public class SenderReceiveThread implements Runnable {
                 Globals.senderSeqNum = Globals.receiverAckNum;
     
                 Globals.isAckReceived = true;
+                Globals.lastAckNum = Globals.receiverAckNum;
+                // Globals.lastSeqNum = Globals.lastAckNum - Globals.maxSegmentSize;
+
+                // Create a new buffer which only contains the packets that
+                // have not been acknowledged yet.
+                ArrayList<Packet> tempBuffer = new ArrayList<>();
+                for (Packet currPacket: Globals.sendBuffer) {
+                    if (currPacket.getSeqNum() > Globals.lastAckNum) {
+                        tempBuffer.add(currPacket);
+                    }
+                }
+                Globals.sendBuffer = tempBuffer;
     
                 if (Globals.receiverAckNum >= (Globals.fileToSend.length() + Globals.initSeqNum)) {
                     Globals.syncLock.unlock();

@@ -72,6 +72,14 @@ public class Helper {
             seqNum, numBytes, ackNum);
     }
 
+    public static void logDrop(int seqNum, int numBytes, int ackNum) {
+        Globals.senderNumBytes = Globals.bytesRead;
+                    
+        Logger.logData(Globals.logStream, "drop", 
+            Helper.elapsedTimeInMillis(Globals.start, System.nanoTime()), "D", 
+            seqNum, numBytes, ackNum);
+    }
+
     public static boolean isPacketDropped() {
         if (Globals.randomGen.nextFloat() > Globals.probabilityDrop) {
             return false;
@@ -79,5 +87,6 @@ public class Helper {
             return true;
         }
     } 
+
 
 }

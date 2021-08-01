@@ -106,7 +106,7 @@ public class Sender {
         Globals.randomGen = new Random(Globals.seed);
 
         // Create packet buffer for sending data
-        Globals.sendBuffer = new PacketBuffer();
+        Globals.sendBuffer = new ArrayList<>();
 
         // get input from file
         Globals.fileToSend = new File(Globals.filename);
