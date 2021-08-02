@@ -7,15 +7,16 @@ public class SenderSendThread implements Runnable {
 
 
 
-    public static void checkTimeout() throws IOException {
-        if (Globals.sendBuffer.size() > 0) {
+    public static void checkTimeout(ArrayList<Packet> sendBuffer) throws IOException {
+        if (sendBuffer.size() > 0) {
             double elapsedTime = Helper.elapsedTimeInMillis(Globals.timerStart, 
                 System.nanoTime());
             if (elapsedTime > Globals.timeout) {
                 // Retransmit the packet with sequence number equal to the 
                 // last ACK number from the receiver because that's the packet
                 // that the receiver wants.
-                Helper.retransmit();
+                System.err.println("Retransmitting dropped packet.");
+                Helper.retransmit(sendBuffer, Globals.lastAckNum);
             }
         }
     }
@@ -27,18 +28,21 @@ public class SenderSendThread implements Runnable {
             Globals.syncLock.lock();
 
             try {
-                checkTimeout();
+                checkTimeout(Globals.sendBuffer);
             } catch (IOException e1) {
                 e1.printStackTrace();
             }
 
             if (Globals.sumBytesRead >= Globals.fileToSend.length()) {
+                // if (Globals.sendBuffer.size() > 0) {
+                //     continue;
+                // }
                 Globals.syncLock.unlock();
                 return;
             } 
             
-            System.err.println("expectedAckNum == " + Globals.expectedAckNum);
-            System.err.println("lastAckNum == " + Globals.lastAckNum);
+            // System.err.println("expectedAckNum == " + Globals.expectedAckNum);
+            // System.err.println("lastAckNum == " + Globals.lastAckNum);
 
             Globals.lastByteSent = Globals.expectedAckNum;
             Globals.lastByteAcked = Globals.lastAckNum;

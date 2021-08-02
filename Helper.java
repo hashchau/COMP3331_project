@@ -89,9 +89,9 @@ public class Helper {
         }
     } 
 
-    public static void retransmit() throws IOException {
-        for (Packet currPacket : Globals.sendBuffer) {
-            if (currPacket.getSeqNum() == Globals.lastAckNum) {
+    public static void retransmit(ArrayList<Packet> sendBuffer, int seqNum) throws IOException {
+        for (Packet currPacket : sendBuffer) {
+            if (currPacket.getSeqNum() == seqNum) {
                 Globals.timerStart = System.nanoTime();
                 DatagramPacket sendPacket = currPacket.createDatagramPacket();
                 // System.err.println("Resending dropped packet.");
@@ -101,6 +101,15 @@ public class Helper {
                     currPacket.getDataLength(),
                     currPacket.getAckNum()
                 );
+                ArrayList<Packet> tempBuffer = new ArrayList<>();
+                // Remove retransmitted packet from buffer
+                // for (Packet bufferPacket : sendBuffer) {
+                //     if (bufferPacket.getSeqNum() != currPacket.getSeqNum()) {
+                //         tempBuffer.add(bufferPacket);
+                //     }
+                //     sendBuffer = tempBuffer;
+                // }
+                break;
             }
         }
     }

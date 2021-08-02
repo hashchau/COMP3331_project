@@ -152,9 +152,6 @@ public class Receiver {
             dataIn.close();
             byteIn.close();
 
-            if (senderFinFlag == 1) {
-                break;
-            }
 
             Packet currPacket = new Packet(senderSeqNum, senderAckNum, 
                 senderAckFlag, senderSynFlag, senderFinFlag, maxSegmentSize, 
@@ -167,11 +164,17 @@ public class Receiver {
 
             // Added code -----------------------------------------------------
 
-            if (currPacket.getSeqNum() == lastReceivedSeqNum) {
-                continue;
-            }
+            // TODO: add this to summary log stats
+            // if (currPacket.getSeqNum() == lastReceivedSeqNum) {
+            //     System.err.println("This is entered.");
+            //     continue;
+            // }
 
-            lastReceivedSeqNum = currPacket.getSeqNum();
+            // lastReceivedSeqNum = currPacket.getSeqNum();
+
+            if (senderFinFlag == 1) {
+                break;
+            }
 
             // System.err.println("currPacket.getSeqNum() == " + currPacket.getSeqNum());
             // System.err.println("expectedSeqNum == " + expectedSeqNum);
@@ -204,7 +207,7 @@ public class Receiver {
                             expectedSeqNum += currPacket.getLength();
                             outOfOrder = true;
                             receiverSeqNum = senderAckNum;
-                            Packet responsePacket = new Packet(receiverSeqNum, receiverAckNum, 
+                            Packet responsePacket = new Packet(receiverSeqNum, expectedSeqNum, 
                                 1, 0, 0, maxSegmentSize, maxWindowSize, null);
                             responsePacket.getHeaders();
                             DatagramPacket ackPacket = 
@@ -212,10 +215,11 @@ public class Receiver {
                             receiverSocket.send(ackPacket);
                             Logger.logData(logStream, "snd", 
                                 Helper.elapsedTimeInMillis(start, System.nanoTime()), "A", 
-                                receiverSeqNum, receiverNumBytes, receiverAckNum);
+                                receiverSeqNum, receiverNumBytes, expectedSeqNum);
                         }
                     }
                 } else {
+                    // System.err.println("This is entered.");
                     receiverSeqNum = senderAckNum;
                     Packet responsePacket = new Packet(receiverSeqNum, receiverAckNum, 
                         1, 0, 0, maxSegmentSize, maxWindowSize, null);
@@ -240,7 +244,7 @@ public class Receiver {
                 receiverSocket.send(ackPacket);
                 Logger.logData(logStream, "snd", 
                     Helper.elapsedTimeInMillis(start, System.nanoTime()), "A", 
-                    receiverSeqNum, receiverNumBytes, receiverAckNum);
+                    receiverSeqNum, receiverNumBytes, expectedSeqNum);
                 expectedSeqNum = receiverAckNum;
             }
 
