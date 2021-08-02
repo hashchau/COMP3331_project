@@ -72,7 +72,6 @@ public class Helper {
             seqNum, numBytes, ackNum);
     }
 
-
     public static void logDrop(int seqNum, int numBytes, int ackNum) {
         Globals.senderNumBytes = Globals.bytesRead;
                     
@@ -103,14 +102,7 @@ public class Helper {
                     currPacket.getAckNum()
                 );
 
-                // Remove retransmitted packet from buffer
-                // ArrayList<Packet> tempBuffer = new ArrayList<>();
-                // for (Packet bufferPacket : sendBuffer) {
-                //     if (bufferPacket.getSeqNum() != currPacket.getSeqNum()) {
-                //         tempBuffer.add(bufferPacket);
-                //     }
-                //     sendBuffer = tempBuffer;
-                // }
+                Globals.totalRetransmittedSegments++;
                 break;
             }
         }

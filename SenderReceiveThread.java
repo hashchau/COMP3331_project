@@ -1,7 +1,7 @@
 import java.io.*;
 import java.util.*;
 import java.net.*;
-import java.util.concurrent.locks.*;
+
 
 public class SenderReceiveThread implements Runnable {
     @Override
@@ -58,11 +58,12 @@ public class SenderReceiveThread implements Runnable {
                 } 
             
                 else if (receivedPacket.getAckNum() == Globals.lastAckNum) {
-                    System.err.println("Received a duplicate ACK!");
+                    // System.err.println("Received a duplicate ACK!");
                     Globals.numDupAcks += 1;
+                    Globals.totalDupAcksReceived++;
                     if (Globals.numDupAcks == 3) {
                         // Retransmit oldest unACKed packet
-                        System.err.println("Retransmitting oldest unACKed packet.");
+                        // System.err.println("Retransmitting oldest unACKed packet.");
                         Helper.retransmit(Globals.sendBuffer, Globals.lastAckNum);
                         Globals.numDupAcks = 0;
                     }

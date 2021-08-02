@@ -1,7 +1,6 @@
 import java.io.*;
 import java.net.*;
 import java.util.*;
-import java.util.concurrent.locks.*;
 
 public class Sender {
     private static final int headerSize = 19;
@@ -190,6 +189,9 @@ public class Sender {
                 Helper.elapsedTimeInMillis(Globals.start, System.nanoTime()), "A", 
                 Globals.senderSeqNum, Globals.senderNumBytes, Globals.senderAckNum);
         }
+
+        // Log summary stats
+        Logger.logSenderStats(Globals.logStream);
 
         // Close the socket ---------------------------------------------------
 

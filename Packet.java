@@ -1,6 +1,4 @@
 import java.io.*;
-import java.util.*;
-
 import java.net.*;
 
 public class Packet {
@@ -46,6 +44,8 @@ public class Packet {
         this.data = byteOut.toByteArray();
 
         Globals.sumBytesRead += Globals.bytesRead;
+
+        Globals.totalOriginalBytesTransferred += Globals.bytesRead;
     }
 
     public void getHeaders() throws IOException {
@@ -92,6 +92,9 @@ public class Packet {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        Globals.totalOriginalBytesReceived += this.data.length;
+        Globals.totalSegmentsReceived++;
     }
 
 

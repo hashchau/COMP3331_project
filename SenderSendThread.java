@@ -1,11 +1,8 @@
 import java.io.*;
 import java.util.*;
 import java.net.*;
-import java.util.concurrent.locks.*;
 
 public class SenderSendThread implements Runnable {   
-
-
 
     public static void checkTimeout(ArrayList<Packet> sendBuffer) throws IOException {
         if (sendBuffer.size() > 0) {
@@ -15,7 +12,7 @@ public class SenderSendThread implements Runnable {
                 // Retransmit the packet with sequence number equal to the 
                 // last ACK number from the receiver because that's the packet
                 // that the receiver wants.
-                System.err.println("Retransmitting dropped packet.");
+                // System.err.println("Retransmitting dropped packet.");
                 Helper.retransmit(sendBuffer, Globals.lastAckNum);
             }
         }
@@ -62,10 +59,10 @@ public class SenderSendThread implements Runnable {
                     Globals.expectedAckNum = Globals.senderSeqNum + currPacket.getDataLength();
                     Globals.senderSeqNum += currPacket.getDataLength();   
 
-                    System.err.println("Packets currently in send buffer:");
-                    for (Packet bufferPacket : Globals.sendBuffer) {
-                        System.err.println("\t" + bufferPacket.getSeqNum());
-                    }
+                    // System.err.println("Packets currently in send buffer:");
+                    // for (Packet bufferPacket : Globals.sendBuffer) {
+                    //     System.err.println("\t" + bufferPacket.getSeqNum());
+                    // }
 
                     // Globals.timerStart = System.nanoTime();  
                     currPacket.setTimeSent(System.nanoTime());
@@ -77,6 +74,7 @@ public class SenderSendThread implements Runnable {
                             currPacket.getDataLength(),
                             currPacket.getAckNum()
                         );
+                        Globals.totalPacketsDropped++;
                     } else {
                         DatagramPacket sendPacket = currPacket.createDatagramPacket();
                         Globals.senderSocket.send(sendPacket);
@@ -86,7 +84,7 @@ public class SenderSendThread implements Runnable {
                             currPacket.getDataLength(),
                             currPacket.getAckNum()
                         );  
-                                             
+                        Globals.totalSegmentsSent++;
                     }
                     // Globals.isAckReceived = false;
 

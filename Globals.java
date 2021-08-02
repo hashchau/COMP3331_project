@@ -7,6 +7,7 @@ public class Globals {
     // Constants
     public static final long UPDATE_INTERVAL = 100;
     public static final int SOCKET_TIMEOUT = 200;
+    // public static final int RECEIVER_TIMEOUT = 2000;
     public static final int HEADER_SIZE = 19;
 
     // Arg-related
@@ -53,4 +54,16 @@ public class Globals {
     public static int numDupAcks = 0;
     public static int lastByteSent;
     public static int lastByteAcked;
+
+    // Summary stats for sender
+    public static int totalOriginalBytesTransferred = 0;
+    public static int totalSegmentsSent = 0;
+    public static int totalPacketsDropped = 0;
+    public static int totalRetransmittedSegments = 0;
+    public static int totalDupAcksReceived = 0;
+
+    // Summary stats for receiver
+    public static int totalOriginalBytesReceived = 0;
+    public static int totalSegmentsReceived = 0;
+    public static int totalDupSegmentsReceived = 0;
 }
