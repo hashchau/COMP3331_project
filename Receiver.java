@@ -30,6 +30,7 @@ public class Receiver {
         long start = System.nanoTime();
 
 		DatagramSocket receiverSocket = new DatagramSocket(receiverPort);
+        // receiverSocket.setSoTimeout(Globals.SOCKET_TIMEOUT);
         System.out.println("Receiver is ready:");
         
         // Receive SYN and send out SYN-ACK -----------------------------------
@@ -166,7 +167,7 @@ public class Receiver {
 
             // TODO: add this to summary log stats
             if (currPacket.getSeqNum() == lastReceivedSeqNum) {
-                System.err.println("This is entered.");
+                System.err.println("Drop packet as we have already received this.");
                 continue;
             }
 

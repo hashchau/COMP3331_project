@@ -47,8 +47,8 @@ public class SenderSendThread implements Runnable {
             Globals.lastByteSent = Globals.expectedAckNum;
             Globals.lastByteAcked = Globals.lastAckNum;
             
-            if (Globals.isAckReceived == true) {
-            // if ((Globals.lastByteSent - Globals.lastByteAcked) <= Globals.maxWindowSize) {
+            // if (Globals.isAckReceived == true) {
+            if ((Globals.lastByteSent - Globals.lastByteAcked) <= Globals.maxWindowSize) {
                 try {
                     // Create a packet with filled header fields but no data.
                     Packet currPacket = new Packet(Globals.senderSeqNum, 
@@ -88,7 +88,7 @@ public class SenderSendThread implements Runnable {
                         );  
                                              
                     }
-                    Globals.isAckReceived = false;
+                    // Globals.isAckReceived = false;
 
 
                 } catch (IOException e) {

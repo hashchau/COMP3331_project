@@ -68,7 +68,7 @@ public class SenderReceiveThread implements Runnable {
                     }
                 }
     
-                Globals.isAckReceived = true;
+                // Globals.isAckReceived = true;
                 Globals.lastAckNum = receivedPacket.getAckNum();
 
             } catch (IOException e) {
