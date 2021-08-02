@@ -46,25 +46,26 @@ public class SenderReceiveThread implements Runnable {
                 if (receivedPacket.getAckNum() == Globals.expectedAckNum) {
                     // Create a new buffer which only contains the packets that
                     // have not been acknowledged yet.
-                    ArrayList<Packet> tempBuffer = new ArrayList<>();
+                    
                     for (Packet currPacket: Globals.sendBuffer) {
-                        if (currPacket.getSeqNum() > Globals.lastAckNum) {
+                        ArrayList<Packet> tempBuffer = new ArrayList<>();
+                        if ((currPacket.getSeqNum() + currPacket.getLength()) > Globals.expectedAckNum) {
                             tempBuffer.add(currPacket);
                         }
+                        Globals.sendBuffer = tempBuffer;
                     }
-                    Globals.sendBuffer = tempBuffer;
                 } 
-                
-                // else if (receivedPacket.getAckNum() == Globals.lastAckNum) {
-                //     System.err.println("Received a duplicate ACK!");
-                //     Globals.numDupAcks += 1;
-                //     if (Globals.numDupAcks == 3) {
-                //         // Retransmit oldest unACKed packet
-                //         System.err.println("Retransmitting oldest unACKed packet.");
-                //         Helper.retransmit();
-                //         Globals.numDupAcks = 0;
-                //     }
-                // }
+            
+                else if (receivedPacket.getAckNum() == Globals.lastAckNum) {
+                    System.err.println("Received a duplicate ACK!");
+                    Globals.numDupAcks += 1;
+                    if (Globals.numDupAcks == 3) {
+                        // Retransmit oldest unACKed packet
+                        System.err.println("Retransmitting oldest unACKed packet.");
+                        Helper.retransmit();
+                        Globals.numDupAcks = 0;
+                    }
+                }
     
                 Globals.isAckReceived = true;
                 Globals.lastAckNum = receivedPacket.getAckNum();
@@ -82,8 +83,6 @@ public class SenderReceiveThread implements Runnable {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-
-            
 
         }
     }

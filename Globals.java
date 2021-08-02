@@ -34,13 +34,12 @@ public class Globals {
     public static int senderNumBytes;
     public static int receiverNumBytes;
     public static int bytesRead;
-    public static int initSeqNum = 121;
+    public static int initSeqNum = 0;
     public static int senderSeqNum;
     public static int senderAckNum;
     public static int receiverSeqNum;
     public static int receiverAckNum;
 
-    public static int expectedAckNum;
     // Extra
     public static int sumBytesRead = 0;
     public static boolean isConnected = false;
@@ -48,7 +47,10 @@ public class Globals {
     public static Random randomGen;
     public static long timerStart;
     public static ArrayList<Packet> sendBuffer;
-    public static int lastAckNum = 0;
+    public static int expectedAckNum;
+    public static int lastAckNum = initSeqNum + 1;
     // public static int lastSeqNum;
     public static int numDupAcks = 0;
+    public static int lastByteSent;
+    public static int lastByteAcked;
 }

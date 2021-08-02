@@ -173,8 +173,8 @@ public class Receiver {
 
             lastReceivedSeqNum = currPacket.getSeqNum();
 
-            System.err.println("currPacket.getSeqNum() == " + currPacket.getSeqNum());
-            System.err.println("expectedSeqNum == " + expectedSeqNum);
+            // System.err.println("currPacket.getSeqNum() == " + currPacket.getSeqNum());
+            // System.err.println("expectedSeqNum == " + expectedSeqNum);
 
             if (currPacket.getSeqNum() == expectedSeqNum) {
                 currPacket.writeData(outputStream);
