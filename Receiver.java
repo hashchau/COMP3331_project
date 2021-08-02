@@ -165,12 +165,12 @@ public class Receiver {
             // Added code -----------------------------------------------------
 
             // TODO: add this to summary log stats
-            // if (currPacket.getSeqNum() == lastReceivedSeqNum) {
-            //     System.err.println("This is entered.");
-            //     continue;
-            // }
+            if (currPacket.getSeqNum() == lastReceivedSeqNum) {
+                System.err.println("This is entered.");
+                continue;
+            }
 
-            // lastReceivedSeqNum = currPacket.getSeqNum();
+            lastReceivedSeqNum = currPacket.getSeqNum();
 
             if (senderFinFlag == 1) {
                 break;
@@ -245,7 +245,6 @@ public class Receiver {
                 Logger.logData(logStream, "snd", 
                     Helper.elapsedTimeInMillis(start, System.nanoTime()), "A", 
                     receiverSeqNum, receiverNumBytes, expectedSeqNum);
-                expectedSeqNum = receiverAckNum;
             }
 
             // End of added code ----------------------------------------------
