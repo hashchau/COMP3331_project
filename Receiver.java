@@ -14,8 +14,10 @@ public class Receiver {
         int receiverAckNum = 0;
         int receiverNumBytes = 0;
         int senderNumBytes = 0;
-        int expectedSeqNum = 0;
+        // 1 is added to initSeqNum due to connection establishment
+        int expectedSeqNum = Globals.initSeqNum + 1; 
         boolean outOfOrder = false;
+        int lastReceivedSeqNum = 0;
 
 		int receiverPort = Integer.parseInt(args[0]);
         String outputFilename = args[1];
@@ -113,6 +115,15 @@ public class Receiver {
 
         while (true) {
 
+            // Receiver always sends 0 bytes.
+            receiverNumBytes = 0;
+
+            // Print the packets currently in the buffer
+            System.err.println("Packets currently in receive buffer:");
+            for (Packet bufferPacket : receiveBuffer) {
+                System.err.println("\t" + bufferPacket.getSeqNum());
+            }
+
             // Receive data and write to file.
 
             receivePacket = 
@@ -148,55 +159,119 @@ public class Receiver {
             Packet currPacket = new Packet(senderSeqNum, senderAckNum, 
                 senderAckFlag, senderSynFlag, senderFinFlag, maxSegmentSize, 
                 maxWindowSize, fileData);
-            
-            receiveBuffer.add(currPacket);
 
             Logger.logData(logStream, "rcv", 
                 Helper.elapsedTimeInMillis(start, System.nanoTime()), "D", 
                 currPacket.getSeqNum(), currPacket.getLength(), 
                 currPacket.getAckNum());
 
-            // if (currPacket.getSeqNum() == expectedSeqNum) {
-            //     currPacket.writeData(outputStream);
-            //     receiverAckNum += fileData.length;
-            //     if (outOfOrder == true) {
-            //         if (receiveBuffer.size() > 0) {
-            //             if (receiveBuffer.get(0).getSeqNum() == 
-            //                 (currPacket.getSeqNum() + currPacket.getLength())) {
-            //                 for (Packet bufferPacket: receiveBuffer) {
-            //                     bufferPacket.writeData(outputStream);
-            //                 }
-            //                 receiveBuffer = new ArrayList<>();
-            //                 outOfOrder = false;
-            //                 // TODO: create ack packet and send
-            //                 expectedSeqNum = receiverAckNum;
-            //             }
-            //         }
-            //     }
-            // }
+            // Added code -----------------------------------------------------
 
+            if (currPacket.getSeqNum() == lastReceivedSeqNum) {
+                continue;
+            }
 
-            currPacket.writeData(outputStream);
-            receiverAckNum += fileData.length;
+            lastReceivedSeqNum = currPacket.getSeqNum();
 
-            // Send ACK back.
-            receiverSeqNum = senderAckNum;
+            System.err.println("currPacket.getSeqNum() == " + currPacket.getSeqNum());
+            System.err.println("expectedSeqNum == " + expectedSeqNum);
 
-            Packet responsePacket = new Packet(receiverSeqNum, receiverAckNum, 
-            1, 0, 0, maxSegmentSize, maxWindowSize, null);
-            responsePacket.getHeaders();
+            if (currPacket.getSeqNum() == expectedSeqNum) {
+                currPacket.writeData(outputStream);
+                receiverAckNum += currPacket.getLength();
+                if (outOfOrder == true) {
+                    if (receiveBuffer.size() > 0) {
+                        if (receiveBuffer.get(0).getSeqNum() == 
+                            (currPacket.getSeqNum() + currPacket.getLength())) {
+                            for (Packet bufferPacket: receiveBuffer) {
+                                bufferPacket.writeData(outputStream);
+                            }
+                            receiveBuffer = new ArrayList<>();
+                            outOfOrder = false;
+                            // Send ACK back.
+                            receiverSeqNum = senderAckNum;
+                            Packet responsePacket = new Packet(receiverSeqNum, receiverAckNum, 
+                                1, 0, 0, maxSegmentSize, maxWindowSize, null);
+                            responsePacket.getHeaders();
+                            DatagramPacket ackPacket = 
+                                responsePacket.createAckPacket(senderHostIP, senderPort);
+                            receiverSocket.send(ackPacket);
+                            Logger.logData(logStream, "snd", 
+                                Helper.elapsedTimeInMillis(start, System.nanoTime()), "A", 
+                                receiverSeqNum, receiverNumBytes, receiverAckNum);
+                            expectedSeqNum = receiverAckNum;
+                        } else {
+                            expectedSeqNum += currPacket.getLength();
+                            outOfOrder = true;
+                            receiverSeqNum = senderAckNum;
+                            Packet responsePacket = new Packet(receiverSeqNum, receiverAckNum, 
+                                1, 0, 0, maxSegmentSize, maxWindowSize, null);
+                            responsePacket.getHeaders();
+                            DatagramPacket ackPacket = 
+                                responsePacket.createAckPacket(senderHostIP, senderPort);
+                            receiverSocket.send(ackPacket);
+                            Logger.logData(logStream, "snd", 
+                                Helper.elapsedTimeInMillis(start, System.nanoTime()), "A", 
+                                receiverSeqNum, receiverNumBytes, receiverAckNum);
+                        }
+                    }
+                } else {
+                    receiverSeqNum = senderAckNum;
+                    Packet responsePacket = new Packet(receiverSeqNum, receiverAckNum, 
+                        1, 0, 0, maxSegmentSize, maxWindowSize, null);
+                    responsePacket.getHeaders();
+                    DatagramPacket ackPacket = 
+                        responsePacket.createAckPacket(senderHostIP, senderPort);
+                    receiverSocket.send(ackPacket);
+                    Logger.logData(logStream, "snd", 
+                        Helper.elapsedTimeInMillis(start, System.nanoTime()), "A", 
+                        receiverSeqNum, receiverNumBytes, receiverAckNum);
+                    expectedSeqNum = receiverAckNum;
+                }
+            } else {
+                receiveBuffer.add(currPacket);
+                receiverAckNum += currPacket.getLength();
+                outOfOrder = true;
+                Packet responsePacket = new Packet(receiverSeqNum, expectedSeqNum, 
+                        1, 0, 0, maxSegmentSize, maxWindowSize, null);
+                responsePacket.getHeaders();
+                DatagramPacket ackPacket = 
+                    responsePacket.createAckPacket(senderHostIP, senderPort);
+                receiverSocket.send(ackPacket);
+                Logger.logData(logStream, "snd", 
+                    Helper.elapsedTimeInMillis(start, System.nanoTime()), "A", 
+                    receiverSeqNum, receiverNumBytes, receiverAckNum);
+                expectedSeqNum = receiverAckNum;
+            }
 
-            DatagramPacket ackPacket = 
-                responsePacket.createAckPacket(senderHostIP, senderPort);
+            // End of added code ----------------------------------------------
 
-            receiverSocket.send(ackPacket);
+            // Removed code ---------------------------------------------------
+
+            // currPacket.writeData(outputStream);
+            // receiverAckNum += fileData.length;
+
+            // // Send ACK back.
+            // receiverSeqNum = senderAckNum;
+
+            // Packet responsePacket = new Packet(receiverSeqNum, receiverAckNum, 
+            // 1, 0, 0, maxSegmentSize, maxWindowSize, null);
+            // responsePacket.getHeaders();
+
+            // DatagramPacket ackPacket = 
+            //     responsePacket.createAckPacket(senderHostIP, senderPort);
+
+            // receiverSocket.send(ackPacket);
             
-            receiverNumBytes = 0;
-            Logger.logData(logStream, "snd", 
-                Helper.elapsedTimeInMillis(start, System.nanoTime()), "A", 
-                receiverSeqNum, receiverNumBytes, receiverAckNum);
+            // Logger.logData(logStream, "snd", 
+            //     Helper.elapsedTimeInMillis(start, System.nanoTime()), "A", 
+            //     receiverSeqNum, receiverNumBytes, receiverAckNum);
 
-            expectedSeqNum = receiverAckNum;
+            // expectedSeqNum = receiverAckNum;
+
+            // End of removed code --------------------------------------------
+
+        
             
 		} // end of while (true)
 

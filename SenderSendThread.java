@@ -52,9 +52,9 @@ public class SenderSendThread implements Runnable {
                     Globals.expectedAckNum = Globals.senderSeqNum + currPacket.getDataLength();
                     Globals.senderSeqNum += currPacket.getDataLength();   
 
-                    System.err.println("Packets currently in buffer:");
+                    System.err.println("Packets currently in send buffer:");
                     for (Packet bufferPacket : Globals.sendBuffer) {
-                        System.err.println(bufferPacket.getSeqNum());
+                        System.err.println("\t" + bufferPacket.getSeqNum());
                     }
 
                     Globals.timerStart = System.nanoTime();  
