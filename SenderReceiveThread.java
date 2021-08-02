@@ -31,7 +31,7 @@ public class SenderReceiveThread implements Runnable {
                 Packet receivedPacket = new Packet(Globals.receiverSeqNum, 
                     Globals.receiverAckNum, receiverAckFlag, receiverSynFlag, 
                     receiverFinFlag, Globals.maxSegmentSize, 
-                    Globals.maxWindowSize, null);
+                    Globals.maxWindowSize, null, System.nanoTime());
 
                 Logger.logData(Globals.logStream, "rcv", 
                 Helper.elapsedTimeInMillis(Globals.start, System.nanoTime()), "A", 
@@ -48,9 +48,9 @@ public class SenderReceiveThread implements Runnable {
                     // have not been acknowledged yet.
                     for (Packet currPacket: Globals.sendBuffer) {
                         ArrayList<Packet> tempBuffer = new ArrayList<>();
-                        // if ((currPacket.getSeqNum() + currPacket.getLength()) > Globals.expectedAckNum) {
+                        if ((currPacket.getSeqNum() + currPacket.getLength()) > Globals.expectedAckNum) {
                         // if (currPacket.getSeqNum() >= Globals.expectedAckNum) {
-                        if (currPacket.getSeqNum() > Globals.expectedAckNum) {
+                        // if (currPacket.getSeqNum() > Globals.expectedAckNum) {
                             tempBuffer.add(currPacket);
                         }
                         Globals.sendBuffer = tempBuffer;

@@ -9,7 +9,7 @@ public class SenderSendThread implements Runnable {
 
     public static void checkTimeout(ArrayList<Packet> sendBuffer) throws IOException {
         if (sendBuffer.size() > 0) {
-            double elapsedTime = Helper.elapsedTimeInMillis(Globals.timerStart, 
+            double elapsedTime = Helper.elapsedTimeInMillis(sendBuffer.get(0).getTimeSent(),
                 System.nanoTime());
             if (elapsedTime > Globals.timeout) {
                 // Retransmit the packet with sequence number equal to the 
@@ -53,7 +53,7 @@ public class SenderSendThread implements Runnable {
                     // Create a packet with filled header fields but no data.
                     Packet currPacket = new Packet(Globals.senderSeqNum, 
                         Globals.senderAckNum, 0, 0, 0, Globals.maxSegmentSize, 
-                        Globals.maxWindowSize, null);
+                        Globals.maxWindowSize, null, System.nanoTime());
                     // Read from input file and add data to packet.
                     currPacket.getData();
                     // Add the packet to the buffer.
@@ -67,7 +67,8 @@ public class SenderSendThread implements Runnable {
                         System.err.println("\t" + bufferPacket.getSeqNum());
                     }
 
-                    Globals.timerStart = System.nanoTime();  
+                    // Globals.timerStart = System.nanoTime();  
+                    currPacket.setTimeSent(System.nanoTime());
 
                     if (Helper.isPacketDropped() == true) {
                         // Don't send anything; just log the drop.

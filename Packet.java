@@ -13,9 +13,10 @@ public class Packet {
     private int maxSegmentSize;
     private int maxWindowSize;
     private byte[] data = null;
+    private long timeSent;
 
     public Packet(int seqNum, int ackNum, int ackFlag, int synFlag, int finFlag, 
-        int maxSegmentSize, int maxWindowSize, byte[] data) {
+        int maxSegmentSize, int maxWindowSize, byte[] data, long timeSent) {
         this.seqNum = seqNum;
         this.ackNum = ackNum;
         this.ackFlag = ackFlag;
@@ -24,6 +25,7 @@ public class Packet {
         this.maxSegmentSize = maxSegmentSize;
         this.maxWindowSize = maxWindowSize;
         this.data = data;
+        this.timeSent = timeSent;
     }
 
     public void getData() throws IOException {
@@ -93,6 +95,8 @@ public class Packet {
     }
 
 
+
+
     public int getSeqNum() {
         return this.seqNum;
     }
@@ -151,6 +155,17 @@ public class Packet {
     public void setData(byte[] data) {
         this.data = data;
     }
+
+    public long getTimeSent() {
+        return this.timeSent;
+    }
+
+    public void setTimeSent(long timeSent) {
+        this.timeSent = timeSent;
+    }
+
+
+
 
 
 }

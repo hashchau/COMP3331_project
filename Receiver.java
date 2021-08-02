@@ -152,10 +152,10 @@ public class Receiver {
             dataIn.close();
             byteIn.close();
 
-
+            // Create Packet object to contain received DatagramPacket from sender.
             Packet currPacket = new Packet(senderSeqNum, senderAckNum, 
                 senderAckFlag, senderSynFlag, senderFinFlag, maxSegmentSize, 
-                maxWindowSize, fileData);
+                maxWindowSize, fileData, System.nanoTime());
 
             Logger.logData(logStream, "rcv", 
                 Helper.elapsedTimeInMillis(start, System.nanoTime()), "D", 
@@ -194,7 +194,7 @@ public class Receiver {
                             // Send ACK back.
                             receiverSeqNum = senderAckNum;
                             Packet responsePacket = new Packet(receiverSeqNum, receiverAckNum, 
-                                1, 0, 0, maxSegmentSize, maxWindowSize, null);
+                                1, 0, 0, maxSegmentSize, maxWindowSize, null, System.nanoTime());
                             responsePacket.getHeaders();
                             DatagramPacket ackPacket = 
                                 responsePacket.createAckPacket(senderHostIP, senderPort);
@@ -208,7 +208,7 @@ public class Receiver {
                             outOfOrder = true;
                             receiverSeqNum = senderAckNum;
                             Packet responsePacket = new Packet(receiverSeqNum, expectedSeqNum, 
-                                1, 0, 0, maxSegmentSize, maxWindowSize, null);
+                                1, 0, 0, maxSegmentSize, maxWindowSize, null, System.nanoTime());
                             responsePacket.getHeaders();
                             DatagramPacket ackPacket = 
                                 responsePacket.createAckPacket(senderHostIP, senderPort);
@@ -222,7 +222,7 @@ public class Receiver {
                     // System.err.println("This is entered.");
                     receiverSeqNum = senderAckNum;
                     Packet responsePacket = new Packet(receiverSeqNum, receiverAckNum, 
-                        1, 0, 0, maxSegmentSize, maxWindowSize, null);
+                        1, 0, 0, maxSegmentSize, maxWindowSize, null, System.nanoTime());
                     responsePacket.getHeaders();
                     DatagramPacket ackPacket = 
                         responsePacket.createAckPacket(senderHostIP, senderPort);
@@ -237,7 +237,7 @@ public class Receiver {
                 receiverAckNum += currPacket.getLength();
                 outOfOrder = true;
                 Packet responsePacket = new Packet(receiverSeqNum, expectedSeqNum, 
-                        1, 0, 0, maxSegmentSize, maxWindowSize, null);
+                        1, 0, 0, maxSegmentSize, maxWindowSize, null, System.nanoTime());
                 responsePacket.getHeaders();
                 DatagramPacket ackPacket = 
                     responsePacket.createAckPacket(senderHostIP, senderPort);
