@@ -48,11 +48,11 @@ public class SenderReceiveThread implements Runnable {
                 if (receivedPacket.getAckNum() == Globals.expectedAckNum) {
                     // Create a new buffer which only contains the packets that
                     // have not been acknowledged yet.
-                    System.err.println("ACK received with number: " + receivedPacket.getAckNum());
+                    // System.err.println("ACK received with number: " + receivedPacket.getAckNum());
                     for (Packet currPacket: Globals.sendBuffer) {
                         ArrayList<Packet> tempBuffer = new ArrayList<>();
-                        if ((currPacket.getSeqNum() + currPacket.getLength()) > Globals.expectedAckNum) {
-                        // if (currPacket.getSeqNum() >= Globals.expectedAckNum) {
+                        // if ((currPacket.getSeqNum() + currPacket.getLength()) > Globals.expectedAckNum) {
+                        if (currPacket.getSeqNum() >= Globals.expectedAckNum) {
                         // if (currPacket.getSeqNum() > Globals.expectedAckNum) {
                             tempBuffer.add(currPacket);
                         }

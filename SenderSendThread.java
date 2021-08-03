@@ -12,7 +12,7 @@ public class SenderSendThread implements Runnable {
                 // Retransmit the packet with sequence number equal to the 
                 // last ACK number from the receiver because that's the packet
                 // that the receiver wants.
-                System.err.println("Retransmitting due to timeout");
+                // System.err.println("Retransmitting due to timeout");
                 Helper.retransmit(sendBuffer, Globals.lastAckNum);
             }
         }
@@ -59,12 +59,12 @@ public class SenderSendThread implements Runnable {
                     Globals.expectedAckNum = Globals.senderSeqNum + currPacket.getDataLength();
                     Globals.senderSeqNum += currPacket.getDataLength();   
 
-                    System.err.println("Sending:");
-                    for (Packet bufferPacket : Globals.sendBuffer) {
-                        System.err.println("\t" + bufferPacket.getSeqNum());
-                    }
+                    // System.err.println("Sending:");
+                    // for (Packet bufferPacket : Globals.sendBuffer) {
+                    //     System.err.println("\t" + bufferPacket.getSeqNum());
+                    // }
 
-                    System.err.println("Sending packet with sequence number: " + currPacket.getSeqNum());
+                    // System.err.println("Sending packet with sequence number: " + currPacket.getSeqNum());
                     currPacket.setTimeSent(System.nanoTime());
 
                     if (Helper.isPacketDropped() == true) {
@@ -74,7 +74,7 @@ public class SenderSendThread implements Runnable {
                             currPacket.getDataLength(),
                             currPacket.getAckNum()
                         );
-                        System.err.println("Packet dropped!");
+                        // System.err.println("Packet dropped!");
                         Globals.totalPacketsDropped++;
                     } else {
                         DatagramPacket sendPacket = currPacket.createDatagramPacket();

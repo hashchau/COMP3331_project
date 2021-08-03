@@ -44,7 +44,7 @@ public class Logger {
         }
 
         // Debugging print statement.
-        System.err.print(stats);
+        // System.err.print(stats);
     }
 
     public static void logReceiverStats(FileOutputStream logStream) {
@@ -64,6 +64,6 @@ public class Logger {
         }
 
         // Debugging print statement.
-        System.err.print(stats);
+        // System.err.print(stats);
     }
 }

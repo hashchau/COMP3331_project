@@ -31,7 +31,7 @@ public class Receiver {
 
 		DatagramSocket receiverSocket = new DatagramSocket(receiverPort);
         // receiverSocket.setSoTimeout(Globals.SOCKET_TIMEOUT);
-        System.out.println("Receiver is ready:");
+        // System.err.println("Receiver is ready:");
         
         // Receive SYN and send out SYN-ACK -----------------------------------
 
@@ -130,7 +130,7 @@ public class Receiver {
             receivePacket = 
                  new DatagramPacket(receiveData, receiveData.length);
 
-            System.err.println("Waiting...");
+            // System.err.println("Waiting...");
                  
             receiverSocket.receive(receivePacket);
 
@@ -180,8 +180,8 @@ public class Receiver {
                 break;
             }
 
-            System.err.println("Packet received with sequence number: " + currPacket.getSeqNum());
-            System.err.println("Expected sequence number is: " + expectedSeqNum);
+            // System.err.println("Packet received with sequence number: " + currPacket.getSeqNum());
+            // System.err.println("Expected sequence number is: " + expectedSeqNum);
 
             // If the received packet arrives in order, then write it straight to the output file.
             if (currPacket.getSeqNum() == expectedSeqNum) {
@@ -210,7 +210,7 @@ public class Receiver {
                                 Helper.elapsedTimeInMillis(start, System.nanoTime()), "A", 
                                 receiverSeqNum, receiverNumBytes, receiverAckNum);
                             expectedSeqNum = receiverAckNum;
-                            System.err.println("Out of order packet received. Sending ACK with number: " + receiverAckNum);
+                            // System.err.println("Out of order packet received. Sending ACK with number: " + receiverAckNum);
                         // If buffer packets are still not in order, send more duplicate ACKs with
                         // the expected sequence number.
                         } else {
@@ -226,7 +226,7 @@ public class Receiver {
                             Logger.logData(logStream, "snd", 
                                 Helper.elapsedTimeInMillis(start, System.nanoTime()), "A", 
                                 receiverSeqNum, receiverNumBytes, expectedSeqNum);
-                            System.err.println("Type 1 duplicate ACK sent.");
+                            // System.err.println("Type 1 duplicate ACK sent.");
                         }
                     }
                 // If packets are in order, reply with an ACK.
@@ -242,7 +242,7 @@ public class Receiver {
                         Helper.elapsedTimeInMillis(start, System.nanoTime()), "A", 
                         receiverSeqNum, receiverNumBytes, receiverAckNum);
                     expectedSeqNum = receiverAckNum;
-                    System.err.println("Sending ACK with number: " + receiverAckNum);
+                    // System.err.println("Sending ACK with number: " + receiverAckNum);
                 }
             // If current packet is received out of order, send a duplicate ACK.
             } else {
@@ -258,7 +258,7 @@ public class Receiver {
                 Logger.logData(logStream, "snd", 
                     Helper.elapsedTimeInMillis(start, System.nanoTime()), "A", 
                     receiverSeqNum, receiverNumBytes, expectedSeqNum);
-                System.err.println("Type 2 duplicate ACK sent.");
+                // System.err.println("Type 2 duplicate ACK sent.");
             }
 
             
