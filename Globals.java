@@ -5,9 +5,9 @@ import java.net.*;
 
 public class Globals {
     // Constants
-    public static final long UPDATE_INTERVAL = 100;
-    public static final int SOCKET_TIMEOUT = 200;
-    // public static final int RECEIVER_TIMEOUT = 2000;
+    public static final long SENDER_SEND_INTERVAL = 100;
+    public static final long SENDER_RECEIVE_INTERVAL = 100;
+    public static final int SOCKET_TIMEOUT = 100;
     public static final int HEADER_SIZE = 19;
 
     // Arg-related
@@ -48,8 +48,8 @@ public class Globals {
     public static Random randomGen;
     public static long timerStart;
     public static ArrayList<Packet> sendBuffer;
-    public static int expectedAckNum;
-    public static int lastAckNum = initSeqNum + 1;
+    public static int expectedAckNum = 0;
+    public static int lastAckNum = 0;
     // public static int lastSeqNum;
     public static int numDupAcks = 0;
     public static int lastByteSent;

@@ -10,6 +10,8 @@ public class SenderReceiveThread implements Runnable {
 
             Globals.syncLock.lock();
 
+            // System.err.println("This is entered.");
+
             int packetSize = Globals.headerSize + Globals.maxSegmentSize;
             byte[] receiveData = new byte[packetSize];
             DatagramPacket receivePacket = 
@@ -46,6 +48,7 @@ public class SenderReceiveThread implements Runnable {
                 if (receivedPacket.getAckNum() == Globals.expectedAckNum) {
                     // Create a new buffer which only contains the packets that
                     // have not been acknowledged yet.
+                    System.err.println("ACK received with number: " + receivedPacket.getAckNum());
                     for (Packet currPacket: Globals.sendBuffer) {
                         ArrayList<Packet> tempBuffer = new ArrayList<>();
                         if ((currPacket.getSeqNum() + currPacket.getLength()) > Globals.expectedAckNum) {
@@ -69,7 +72,6 @@ public class SenderReceiveThread implements Runnable {
                     }
                 }
     
-                // Globals.isAckReceived = true;
                 Globals.lastAckNum = receivedPacket.getAckNum();
 
             } catch (IOException e) {
@@ -79,7 +81,7 @@ public class SenderReceiveThread implements Runnable {
             Globals.syncLock.unlock();
 
             try {
-                Thread.sleep(Globals.UPDATE_INTERVAL);
+                Thread.sleep(Globals.SENDER_RECEIVE_INTERVAL);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

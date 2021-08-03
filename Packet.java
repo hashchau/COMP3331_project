@@ -46,6 +46,7 @@ public class Packet {
         Globals.sumBytesRead += Globals.bytesRead;
 
         Globals.totalOriginalBytesTransferred += Globals.bytesRead;
+        Globals.totalSegmentsSent++;
     }
 
     public void getHeaders() throws IOException {

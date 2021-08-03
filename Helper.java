@@ -103,9 +103,35 @@ public class Helper {
                 );
 
                 Globals.totalRetransmittedSegments++;
-                break;
             }
         }
     }
+
+    // public static void retransmit(ArrayList<Packet> sendBuffer, int seqNum) throws IOException {
+    //     for (Packet currPacket : sendBuffer) {
+    //         if (currPacket.getSeqNum() == seqNum) {
+    //             if (Helper.isPacketDropped() == true) {
+    //                 Helper.logDrop(
+    //                     currPacket.getSeqNum(),
+    //                     currPacket.getDataLength(),
+    //                     currPacket.getAckNum()
+    //                 );
+    //                 System.err.println("Packet dropped!");
+    //                 Globals.totalPacketsDropped++;
+    //             } else {
+    //                 currPacket.setTimeSent(System.nanoTime());
+    //                 DatagramPacket sendPacket = currPacket.createDatagramPacket();
+    //                 Globals.senderSocket.send(sendPacket);
+    //                 Helper.logSend(
+    //                     currPacket.getSeqNum(),
+    //                     currPacket.getDataLength(),
+    //                     currPacket.getAckNum()
+    //                 );
+    //                 Globals.totalRetransmittedSegments++;
+    //             }
+                
+    //         }
+    //     }
+    // }
 
 }

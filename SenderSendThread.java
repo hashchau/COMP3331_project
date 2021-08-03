@@ -12,7 +12,7 @@ public class SenderSendThread implements Runnable {
                 // Retransmit the packet with sequence number equal to the 
                 // last ACK number from the receiver because that's the packet
                 // that the receiver wants.
-                // System.err.println("Retransmitting dropped packet.");
+                System.err.println("Retransmitting due to timeout");
                 Helper.retransmit(sendBuffer, Globals.lastAckNum);
             }
         }
@@ -59,12 +59,12 @@ public class SenderSendThread implements Runnable {
                     Globals.expectedAckNum = Globals.senderSeqNum + currPacket.getDataLength();
                     Globals.senderSeqNum += currPacket.getDataLength();   
 
-                    // System.err.println("Packets currently in send buffer:");
-                    // for (Packet bufferPacket : Globals.sendBuffer) {
-                    //     System.err.println("\t" + bufferPacket.getSeqNum());
-                    // }
+                    System.err.println("Sending:");
+                    for (Packet bufferPacket : Globals.sendBuffer) {
+                        System.err.println("\t" + bufferPacket.getSeqNum());
+                    }
 
-                    // Globals.timerStart = System.nanoTime();  
+                    System.err.println("Sending packet with sequence number: " + currPacket.getSeqNum());
                     currPacket.setTimeSent(System.nanoTime());
 
                     if (Helper.isPacketDropped() == true) {
@@ -74,6 +74,7 @@ public class SenderSendThread implements Runnable {
                             currPacket.getDataLength(),
                             currPacket.getAckNum()
                         );
+                        System.err.println("Packet dropped!");
                         Globals.totalPacketsDropped++;
                     } else {
                         DatagramPacket sendPacket = currPacket.createDatagramPacket();
@@ -84,7 +85,6 @@ public class SenderSendThread implements Runnable {
                             currPacket.getDataLength(),
                             currPacket.getAckNum()
                         );  
-                        Globals.totalSegmentsSent++;
                     }
                     // Globals.isAckReceived = false;
 
@@ -97,7 +97,7 @@ public class SenderSendThread implements Runnable {
             Globals.syncLock.unlock();
 
             try {
-                Thread.sleep(Globals.UPDATE_INTERVAL);
+                Thread.sleep(Globals.SENDER_SEND_INTERVAL);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

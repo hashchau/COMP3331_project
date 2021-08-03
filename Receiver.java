@@ -10,7 +10,7 @@ public class Receiver {
 	public static void main(String[] args) throws Exception {
 
         // Initialise seq and ack nums for logging.
-        int receiverSeqNum = 154;
+        int receiverSeqNum = 0;
         int receiverAckNum = 0;
         int receiverNumBytes = 0;
         int senderNumBytes = 0;
@@ -129,6 +129,9 @@ public class Receiver {
 
             receivePacket = 
                  new DatagramPacket(receiveData, receiveData.length);
+
+            System.err.println("Waiting...");
+                 
             receiverSocket.receive(receivePacket);
 
             currBytes = receivePacket.getData();
@@ -163,6 +166,8 @@ public class Receiver {
                 currPacket.getSeqNum(), currPacket.getLength(), 
                 currPacket.getAckNum());
 
+            // If the current, received packet has the same sequence numbeer as the last received
+            // packet, then discard it.
             if (currPacket.getSeqNum() == lastReceivedSeqNum) {
                 Globals.totalDupSegmentsReceived++;
                 continue;
@@ -170,18 +175,22 @@ public class Receiver {
 
             lastReceivedSeqNum = currPacket.getSeqNum();
 
+            // Break the loop if a packet with a FIN flag is received.
             if (senderFinFlag == 1) {
                 break;
             }
 
-            // System.err.println("currPacket.getSeqNum() == " + currPacket.getSeqNum());
-            // System.err.println("expectedSeqNum == " + expectedSeqNum);
+            System.err.println("Packet received with sequence number: " + currPacket.getSeqNum());
+            System.err.println("Expected sequence number is: " + expectedSeqNum);
 
+            // If the received packet arrives in order, then write it straight to the output file.
             if (currPacket.getSeqNum() == expectedSeqNum) {
                 currPacket.writeData(outputStream);
                 receiverAckNum += currPacket.getLength();
+                // If the packets in the receive buffer are still out of order, process further.
                 if (outOfOrder == true) {
                     if (receiveBuffer.size() > 0) {
+                        // If packets in buffer are in order, write those to output file as well.
                         if (receiveBuffer.get(0).getSeqNum() == 
                             (currPacket.getSeqNum() + currPacket.getLength())) {
                             for (Packet bufferPacket: receiveBuffer) {
@@ -201,6 +210,9 @@ public class Receiver {
                                 Helper.elapsedTimeInMillis(start, System.nanoTime()), "A", 
                                 receiverSeqNum, receiverNumBytes, receiverAckNum);
                             expectedSeqNum = receiverAckNum;
+                            System.err.println("Out of order packet received. Sending ACK with number: " + receiverAckNum);
+                        // If buffer packets are still not in order, send more duplicate ACKs with
+                        // the expected sequence number.
                         } else {
                             expectedSeqNum += currPacket.getLength();
                             outOfOrder = true;
@@ -214,8 +226,10 @@ public class Receiver {
                             Logger.logData(logStream, "snd", 
                                 Helper.elapsedTimeInMillis(start, System.nanoTime()), "A", 
                                 receiverSeqNum, receiverNumBytes, expectedSeqNum);
+                            System.err.println("Type 1 duplicate ACK sent.");
                         }
                     }
+                // If packets are in order, reply with an ACK.
                 } else {
                     receiverSeqNum = senderAckNum;
                     Packet responsePacket = new Packet(receiverSeqNum, receiverAckNum, 
@@ -228,7 +242,9 @@ public class Receiver {
                         Helper.elapsedTimeInMillis(start, System.nanoTime()), "A", 
                         receiverSeqNum, receiverNumBytes, receiverAckNum);
                     expectedSeqNum = receiverAckNum;
+                    System.err.println("Sending ACK with number: " + receiverAckNum);
                 }
+            // If current packet is received out of order, send a duplicate ACK.
             } else {
                 receiveBuffer.add(currPacket);
                 receiverAckNum += currPacket.getLength();
@@ -242,6 +258,7 @@ public class Receiver {
                 Logger.logData(logStream, "snd", 
                     Helper.elapsedTimeInMillis(start, System.nanoTime()), "A", 
                     receiverSeqNum, receiverNumBytes, expectedSeqNum);
+                System.err.println("Type 2 duplicate ACK sent.");
             }
 
             
