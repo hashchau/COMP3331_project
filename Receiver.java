@@ -20,6 +20,7 @@ public class Receiver {
         int lastReceivedSeqNum = 0;
 
 		int receiverPort = Integer.parseInt(args[0]);
+        System.err.println("receiverPort == " + receiverPort);
         String outputFilename = args[1];
 
         // Open Sender_log.txt for logging sender packets
@@ -31,7 +32,7 @@ public class Receiver {
 
 		DatagramSocket receiverSocket = new DatagramSocket(receiverPort);
         // receiverSocket.setSoTimeout(Globals.SOCKET_TIMEOUT);
-        // System.err.println("Receiver is ready:");
+        System.err.println("Receiver is ready:");
         
         // Receive SYN and send out SYN-ACK -----------------------------------
 

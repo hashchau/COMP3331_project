@@ -1,4 +1,4 @@
-javac SenderSendThread.java && javac SenderReceiveThread.java && javac Helper.java && javac Globals.java && javac Logger.java && javac Packet.java && javac Receiver.java && java Receiver 5000 FileReceived.txt
+javac SenderSendThread.java && javac SenderReceiveThread.java && javac Helper.java && javac Globals.java && javac Logger.java && javac Packet.java && javac Receiver.java && java Receiver 50100 FileReceived.txt
 
-javac Sender.java && java Sender 127.0.0.1 5000 32KB.txt 500 50 100 0.5 50
+javac Sender.java && java Sender 127.0.0.1 50100 32KB.txt 500 50 100 0.5 50
 
