@@ -10,6 +10,7 @@ public class SenderReceiveThread implements Runnable {
 
             try {
                 Globals.syncLock.lock();
+                // Globals.syncCondition.await();
 
                 int packetSize = Globals.headerSize + Globals.maxSegmentSize;
                 byte[] receiveData = new byte[packetSize];
@@ -50,8 +51,8 @@ public class SenderReceiveThread implements Runnable {
                         // System.err.println("ACK received with number: " + receivedPacket.getAckNum());
                         for (Packet currPacket: Globals.sendBuffer) {
                             ArrayList<Packet> tempBuffer = new ArrayList<>();
-                            // if ((currPacket.getSeqNum() + currPacket.getLength()) > Globals.expectedAckNum) {
-                            if (currPacket.getSeqNum() >= Globals.expectedAckNum) {
+                            if ((currPacket.getSeqNum() + currPacket.getLength()) > Globals.expectedAckNum) {
+                            // if (currPacket.getSeqNum() >= Globals.expectedAckNum) {
                             // if (currPacket.getSeqNum() > Globals.expectedAckNum) {
                                 tempBuffer.add(currPacket);
                             }
@@ -67,7 +68,7 @@ public class SenderReceiveThread implements Runnable {
                         // retransmit the oldest unACKed packet.
                         if (Globals.numDupAcks == 3) {
                             // Retransmit oldest unACKed packet
-                            // System.err.println("Retransmitting oldest unACKed packet.");
+                            // System.err.println("Fast retransmit.");
                             Helper.retransmit(Globals.sendBuffer, Globals.lastAckNum);
                             Globals.numDupAcks = 0;
                         }
@@ -77,7 +78,11 @@ public class SenderReceiveThread implements Runnable {
 
                 } catch (IOException e) {
                     // do nothing
+                    // System.err.println("Entered catch block most likely from socket error.");
                 }
+
+                // Globals.syncCondition.signal();
+
 
             } catch (Exception e) {
                 // Do nothing.
@@ -89,10 +94,6 @@ public class SenderReceiveThread implements Runnable {
                     e.printStackTrace();
                 }
             }
-
-                
-
-
 
         }
     }

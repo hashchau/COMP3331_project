@@ -31,7 +31,7 @@ public class Receiver {
 
 		DatagramSocket receiverSocket = new DatagramSocket(receiverPort);
         // receiverSocket.setSoTimeout(Globals.SOCKET_TIMEOUT);
-        System.err.println("Receiver is ready:");
+        // System.err.println("Receiver is ready:");
         
         // Receive SYN and send out SYN-ACK -----------------------------------
 
@@ -130,7 +130,7 @@ public class Receiver {
             receivePacket = 
                  new DatagramPacket(receiveData, receiveData.length);
 
-            // System.err.println("Waiting...");
+            // System.err.println("Waiting to receive another packet.");
                  
             receiverSocket.receive(receivePacket);
 
@@ -170,6 +170,19 @@ public class Receiver {
             // packet, then discard it.
             if (currPacket.getSeqNum() == lastReceivedSeqNum) {
                 Globals.totalDupSegmentsReceived++;
+                // System.err.println("Duplicate segment received.");
+
+                // receiverSeqNum = senderAckNum;
+                // Packet responsePacket = new Packet(receiverSeqNum, expectedSeqNum, 
+                //     1, 0, 0, maxSegmentSize, maxWindowSize, null, System.nanoTime());
+                // responsePacket.getHeaders();
+                // DatagramPacket ackPacket = 
+                //     responsePacket.createAckPacket(senderHostIP, senderPort);
+                // receiverSocket.send(ackPacket);
+                // Logger.logData(logStream, "snd", 
+                //     Helper.elapsedTimeInMillis(start, System.nanoTime()), "A", 
+                //     receiverSeqNum, receiverNumBytes, expectedSeqNum);
+
                 continue;
             }
 
@@ -185,6 +198,7 @@ public class Receiver {
 
             // If the received packet arrives in order, then write it straight to the output file.
             if (currPacket.getSeqNum() == expectedSeqNum) {
+                // System.err.println("Packet arrived in order; increase receiverAckNum.");
                 currPacket.writeData(outputStream);
                 receiverAckNum += currPacket.getLength();
                 // If the packets in the receive buffer are still out of order, process further.

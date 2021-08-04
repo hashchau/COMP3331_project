@@ -41,6 +41,10 @@ public class Sender {
         } catch (SocketException e) {
             // Do nothing.
         }
+
+        Globals.senderSocket.setReceiveBufferSize(Globals.RECEIVE_BUFFER_SIZE);
+        int receiveBufferSize = Globals.senderSocket.getReceiveBufferSize();
+        System.err.println("receiveBufferSize == " + receiveBufferSize);
         
 
         // Send out SYN -------------------------------------------------------

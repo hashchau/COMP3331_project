@@ -1,13 +1,15 @@
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.Condition;
 import java.net.*;
 
 public class Globals {
     // Constants
     public static final long SENDER_SEND_INTERVAL = 100;
     public static final long SENDER_RECEIVE_INTERVAL = 100;
-    public static final int SOCKET_TIMEOUT = 100;
+    public static final int SOCKET_TIMEOUT = 1000;
+    public static final int RECEIVE_BUFFER_SIZE = 250000;
     public static final int HEADER_SIZE = 19;
 
     // Arg-related
@@ -29,6 +31,7 @@ public class Globals {
     public static FileOutputStream logStream;
     public static long start;
     public static ReentrantLock syncLock = new ReentrantLock();
+    public static Condition syncCondition = syncLock.newCondition();
 
     // Packet-related
 

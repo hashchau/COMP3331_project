@@ -24,6 +24,7 @@ public class SenderSendThread implements Runnable {
 
             try {
                 Globals.syncLock.lock();
+                // Globals.syncCondition.await();
 
                 try {
                     checkTimeout(Globals.sendBuffer);
@@ -94,6 +95,9 @@ public class SenderSendThread implements Runnable {
                         e.printStackTrace();
                     }
                 }
+
+                // Globals.syncCondition.signal();
+
             } catch (Exception e) {
                 // Do nothing
             } finally {
@@ -104,6 +108,7 @@ public class SenderSendThread implements Runnable {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
+
             }
    
         }
