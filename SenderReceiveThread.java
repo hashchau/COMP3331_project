@@ -8,83 +8,91 @@ public class SenderReceiveThread implements Runnable {
     public void run() {
         while (true) {
 
-            Globals.syncLock.lock();
-
-            // System.err.println("This is entered.");
-
-            int packetSize = Globals.headerSize + Globals.maxSegmentSize;
-            byte[] receiveData = new byte[packetSize];
-            DatagramPacket receivePacket = 
-            new DatagramPacket(receiveData, receiveData.length);
             try {
-                Globals.senderSocket.receive(receivePacket);
+                Globals.syncLock.lock();
 
-                byte[] currBytes = receivePacket.getData();
-                ByteArrayInputStream byteIn = new ByteArrayInputStream(currBytes);
-                DataInputStream dataIn = new DataInputStream(byteIn);
-                Globals.receiverSeqNum = dataIn.readInt();
-                Globals.receiverAckNum = dataIn.readInt();
-                int receiverAckFlag = dataIn.readByte();
-                int receiverSynFlag = dataIn.readByte();
-                int receiverFinFlag = dataIn.readByte();
-                Globals.maxSegmentSize = dataIn.readInt();
-                Globals.maxWindowSize = dataIn.readInt();
+                int packetSize = Globals.headerSize + Globals.maxSegmentSize;
+                byte[] receiveData = new byte[packetSize];
+                DatagramPacket receivePacket = 
+                new DatagramPacket(receiveData, receiveData.length);
+                try {
+                    Globals.senderSocket.receive(receivePacket);
 
-                Packet receivedPacket = new Packet(Globals.receiverSeqNum, 
-                    Globals.receiverAckNum, receiverAckFlag, receiverSynFlag, 
-                    receiverFinFlag, Globals.maxSegmentSize, 
-                    Globals.maxWindowSize, null, System.nanoTime());
+                    byte[] currBytes = receivePacket.getData();
+                    ByteArrayInputStream byteIn = new ByteArrayInputStream(currBytes);
+                    DataInputStream dataIn = new DataInputStream(byteIn);
+                    Globals.receiverSeqNum = dataIn.readInt();
+                    Globals.receiverAckNum = dataIn.readInt();
+                    int receiverAckFlag = dataIn.readByte();
+                    int receiverSynFlag = dataIn.readByte();
+                    int receiverFinFlag = dataIn.readByte();
+                    Globals.maxSegmentSize = dataIn.readInt();
+                    Globals.maxWindowSize = dataIn.readInt();
 
-                Logger.logData(Globals.logStream, "rcv", 
-                Helper.elapsedTimeInMillis(Globals.start, System.nanoTime()), "A", 
-                    receivedPacket.getSeqNum(), 0, receivedPacket.getAckNum());
-                
-                if (Globals.receiverAckNum >= (Globals.fileToSend.length() + 
-                    Globals.initSeqNum)) {
-                    Globals.syncLock.unlock();
-                    return;
-                }
+                    Packet receivedPacket = new Packet(Globals.receiverSeqNum, 
+                        Globals.receiverAckNum, receiverAckFlag, receiverSynFlag, 
+                        receiverFinFlag, Globals.maxSegmentSize, 
+                        Globals.maxWindowSize, null, System.nanoTime());
 
-                if (receivedPacket.getAckNum() == Globals.expectedAckNum) {
-                    // Create a new buffer which only contains the packets that
-                    // have not been acknowledged yet.
-                    // System.err.println("ACK received with number: " + receivedPacket.getAckNum());
-                    for (Packet currPacket: Globals.sendBuffer) {
-                        ArrayList<Packet> tempBuffer = new ArrayList<>();
-                        // if ((currPacket.getSeqNum() + currPacket.getLength()) > Globals.expectedAckNum) {
-                        if (currPacket.getSeqNum() >= Globals.expectedAckNum) {
-                        // if (currPacket.getSeqNum() > Globals.expectedAckNum) {
-                            tempBuffer.add(currPacket);
+                    Logger.logData(Globals.logStream, "rcv", 
+                    Helper.elapsedTimeInMillis(Globals.start, System.nanoTime()), "A", 
+                        receivedPacket.getSeqNum(), 0, receivedPacket.getAckNum());
+                    
+                    if (Globals.receiverAckNum >= (Globals.fileToSend.length() + 
+                        Globals.initSeqNum)) {
+                        // Globals.syncLock.unlock(); // Nullified due to finally block.
+                        return;
+                    }
+
+                    if (receivedPacket.getAckNum() == Globals.expectedAckNum) {
+                        // Create a new buffer which only contains the packets that
+                        // have not been acknowledged yet.
+                        // System.err.println("ACK received with number: " + receivedPacket.getAckNum());
+                        for (Packet currPacket: Globals.sendBuffer) {
+                            ArrayList<Packet> tempBuffer = new ArrayList<>();
+                            // if ((currPacket.getSeqNum() + currPacket.getLength()) > Globals.expectedAckNum) {
+                            if (currPacket.getSeqNum() >= Globals.expectedAckNum) {
+                            // if (currPacket.getSeqNum() > Globals.expectedAckNum) {
+                                tempBuffer.add(currPacket);
+                            }
+                            Globals.sendBuffer = tempBuffer;
                         }
-                        Globals.sendBuffer = tempBuffer;
+                    } 
+                
+                    else if (receivedPacket.getAckNum() == Globals.lastAckNum) {
+                        // System.err.println("Received a duplicate ACK!");
+                        Globals.numDupAcks += 1;
+                        Globals.totalDupAcksReceived++;
+                        // If the number of duplicate ACKs reaches 3, then use fast retransmit to
+                        // retransmit the oldest unACKed packet.
+                        if (Globals.numDupAcks == 3) {
+                            // Retransmit oldest unACKed packet
+                            // System.err.println("Retransmitting oldest unACKed packet.");
+                            Helper.retransmit(Globals.sendBuffer, Globals.lastAckNum);
+                            Globals.numDupAcks = 0;
+                        }
                     }
-                } 
-            
-                else if (receivedPacket.getAckNum() == Globals.lastAckNum) {
-                    // System.err.println("Received a duplicate ACK!");
-                    Globals.numDupAcks += 1;
-                    Globals.totalDupAcksReceived++;
-                    if (Globals.numDupAcks == 3) {
-                        // Retransmit oldest unACKed packet
-                        // System.err.println("Retransmitting oldest unACKed packet.");
-                        Helper.retransmit(Globals.sendBuffer, Globals.lastAckNum);
-                        Globals.numDupAcks = 0;
-                    }
+        
+                    Globals.lastAckNum = receivedPacket.getAckNum();
+
+                } catch (IOException e) {
+                    // do nothing
                 }
-    
-                Globals.lastAckNum = receivedPacket.getAckNum();
 
-            } catch (IOException e) {
-                // do nothing
+            } catch (Exception e) {
+                // Do nothing.
+            } finally {
+                Globals.syncLock.unlock();
+                try {
+                    Thread.sleep(Globals.SENDER_RECEIVE_INTERVAL);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
 
-            Globals.syncLock.unlock();
+                
 
-            try {
-                Thread.sleep(Globals.SENDER_RECEIVE_INTERVAL);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+
 
         }
     }

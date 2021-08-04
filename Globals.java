@@ -5,8 +5,8 @@ import java.net.*;
 
 public class Globals {
     // Constants
-    public static final long SENDER_SEND_INTERVAL = 1000;
-    public static final long SENDER_RECEIVE_INTERVAL = 1000;
+    public static final long SENDER_SEND_INTERVAL = 100;
+    public static final long SENDER_RECEIVE_INTERVAL = 100;
     public static final int SOCKET_TIMEOUT = 100;
     public static final int HEADER_SIZE = 19;
 

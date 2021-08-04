@@ -31,7 +31,7 @@ public class Receiver {
 
 		DatagramSocket receiverSocket = new DatagramSocket(receiverPort);
         // receiverSocket.setSoTimeout(Globals.SOCKET_TIMEOUT);
-        // System.err.println("Receiver is ready:");
+        System.err.println("Receiver is ready:");
         
         // Receive SYN and send out SYN-ACK -----------------------------------
 

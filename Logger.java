@@ -17,7 +17,7 @@ public class Logger {
         }
         
         // Debugging print statement.
-        // System.err.print(logString);
+        System.err.print(logString);
 
         // If necessary, use StringBuffer class to create string.
         // Learn how to format tab-separated string.
@@ -44,7 +44,7 @@ public class Logger {
         }
 
         // Debugging print statement.
-        // System.err.print(stats);
+        System.err.print(stats);
     }
 
     public static void logReceiverStats(FileOutputStream logStream) {
@@ -64,6 +64,6 @@ public class Logger {
         }
 
         // Debugging print statement.
-        // System.err.print(stats);
+        System.err.print(stats);
     }
 }
