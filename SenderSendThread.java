@@ -4,15 +4,17 @@ import java.net.*;
 
 public class SenderSendThread implements Runnable {   
 
+    // Checks whether a timeout has occurred; if so, retransmit the oldest unACKed packet
     public static void checkTimeout(ArrayList<Packet> sendBuffer) throws IOException {
         if (sendBuffer.size() > 0) {
             double elapsedTime = Helper.elapsedTimeInMillis(sendBuffer.get(0).getTimeSent(),
                 System.nanoTime());
+            // If a timeout has been detected,
+            // retransmit the packet with sequence number equal to the 
+            // last ACK number from the receiver because that's the packet
+            // that the receiver wants.
             if (elapsedTime > Globals.timeout) {
-                // Retransmit the packet with sequence number equal to the 
-                // last ACK number from the receiver because that's the packet
-                // that the receiver wants.
-                // System.err.println("Retransmitting due to timeout");
+                
                 Helper.retransmit(sendBuffer, Globals.lastAckNum);
             }
         }
@@ -23,30 +25,23 @@ public class SenderSendThread implements Runnable {
         while (true) {
 
             try {
+                // Lock the current thread
                 Globals.syncLock.lock();
-                // Globals.syncCondition.await();
 
+                // Check if a timeout has occurred
                 try {
                     checkTimeout(Globals.sendBuffer);
                 } catch (IOException e1) {
-                    e1.printStackTrace();
+                    // Do nothing
                 }
 
                 if (Globals.sumBytesRead >= Globals.fileToSend.length()) {
-                    // if (Globals.sendBuffer.size() > 0) {
-                    //     continue;
-                    // }
-                    // Globals.syncLock.unlock(); // Nullified due to finally block
                     return;
                 } 
-                
-                // System.err.println("expectedAckNum == " + Globals.expectedAckNum);
-                // System.err.println("lastAckNum == " + Globals.lastAckNum);
 
                 Globals.lastByteSent = Globals.expectedAckNum;
                 Globals.lastByteAcked = Globals.lastAckNum;
                 
-                // if (Globals.isAckReceived == true) {
                 if ((Globals.lastByteSent - Globals.lastByteAcked) <= Globals.maxWindowSize) {
                     try {
                         // Create a packet with filled header fields but no data.
@@ -61,14 +56,10 @@ public class SenderSendThread implements Runnable {
                         Globals.expectedAckNum = Globals.senderSeqNum + currPacket.getDataLength();
                         Globals.senderSeqNum += currPacket.getDataLength();   
 
-                        // System.err.println("Sending:");
-                        // for (Packet bufferPacket : Globals.sendBuffer) {
-                        //     System.err.println("\t" + bufferPacket.getSeqNum());
-                        // }
-
-                        // System.err.println("Sending packet with sequence number: " + currPacket.getSeqNum());
                         currPacket.setTimeSent(System.nanoTime());
 
+                        // Pass the packet through the PL module, which decides whether it should
+                        // be dropped or not
                         if (Helper.isPacketDropped() == true) {
                             // Don't send anything; just log the drop.
                             Helper.logDrop(
@@ -76,7 +67,6 @@ public class SenderSendThread implements Runnable {
                                 currPacket.getDataLength(),
                                 currPacket.getAckNum()
                             );
-                            // System.err.println("Packet dropped!");
                             Globals.totalPacketsDropped++;
                         } else {
                             DatagramPacket sendPacket = currPacket.createDatagramPacket();
@@ -92,21 +82,21 @@ public class SenderSendThread implements Runnable {
 
 
                     } catch (IOException e) {
-                        e.printStackTrace();
+                        // Do nothing
                     }
                 }
-
-                // Globals.syncCondition.signal();
 
             } catch (Exception e) {
                 // Do nothing
             } finally {
+                // Unlock the current thread
                 Globals.syncLock.unlock();
-
+                // Let the thread sleep for the given time interval, which is defined in 
+                // Globals.java
                 try {
                     Thread.sleep(Globals.SENDER_SEND_INTERVAL);
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    // Do nothing
                 }
 
             }

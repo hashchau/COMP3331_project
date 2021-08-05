@@ -9,8 +9,8 @@ public class SenderReceiveThread implements Runnable {
         while (true) {
 
             try {
+                // Lock the current thread
                 Globals.syncLock.lock();
-                // Globals.syncCondition.await();
 
                 int packetSize = Globals.headerSize + Globals.maxSegmentSize;
                 byte[] receiveData = new byte[packetSize];
@@ -19,6 +19,7 @@ public class SenderReceiveThread implements Runnable {
                 try {
                     Globals.senderSocket.receive(receivePacket);
 
+                    // Get field values from received packet
                     byte[] currBytes = receivePacket.getData();
                     ByteArrayInputStream byteIn = new ByteArrayInputStream(currBytes);
                     DataInputStream dataIn = new DataInputStream(byteIn);
@@ -39,37 +40,34 @@ public class SenderReceiveThread implements Runnable {
                     Helper.elapsedTimeInMillis(Globals.start, System.nanoTime()), "A", 
                         receivedPacket.getSeqNum(), 0, receivedPacket.getAckNum());
                     
+                    // If the entire file has already been sent successfully ACKed, return from the 
+                    // thread
                     if (Globals.receiverAckNum >= (Globals.fileToSend.length() + 
                         Globals.initSeqNum)) {
-                        // Globals.syncLock.unlock(); // Nullified due to finally block.
                         return;
                     }
 
+                    // Correct and expected ACK has been received, so update the sender's buffer
                     if (receivedPacket.getAckNum() == Globals.expectedAckNum) {
                         // Create a new buffer which only contains the packets that
                         // have not been acknowledged yet.
-                        // System.err.println("ACK received with number: " + receivedPacket.getAckNum());
                         for (Packet currPacket: Globals.sendBuffer) {
                             ArrayList<Packet> tempBuffer = new ArrayList<>();
                             if ((currPacket.getSeqNum() + currPacket.getLength()) > Globals.expectedAckNum) {
-                            // if (currPacket.getSeqNum() >= Globals.expectedAckNum) {
-                            // if (currPacket.getSeqNum() > Globals.expectedAckNum) {
                                 tempBuffer.add(currPacket);
                             }
                             Globals.sendBuffer = tempBuffer;
                         }
-                    } 
-                
-                    else if (receivedPacket.getAckNum() == Globals.lastAckNum) {
-                        // System.err.println("Received a duplicate ACK!");
+                    // Duplicate ACK has been received
+                    } else if (receivedPacket.getAckNum() == Globals.lastAckNum) {
                         Globals.numDupAcks += 1;
                         Globals.totalDupAcksReceived++;
                         // If the number of duplicate ACKs reaches 3, then use fast retransmit to
                         // retransmit the oldest unACKed packet.
                         if (Globals.numDupAcks == 3) {
                             // Retransmit oldest unACKed packet
-                            // System.err.println("Fast retransmit.");
                             Helper.retransmit(Globals.sendBuffer, Globals.lastAckNum);
+                            // Reset the counter for the total number of received duplicate ACKs
                             Globals.numDupAcks = 0;
                         }
                     }
@@ -77,21 +75,20 @@ public class SenderReceiveThread implements Runnable {
                     Globals.lastAckNum = receivedPacket.getAckNum();
 
                 } catch (IOException e) {
-                    // do nothing
-                    // System.err.println("Entered catch block most likely from socket error.");
+                    // Do nothing
                 }
-
-                // Globals.syncCondition.signal();
-
 
             } catch (Exception e) {
                 // Do nothing.
             } finally {
+                // Unlock the current thread
                 Globals.syncLock.unlock();
+                // Let the thread sleep for the given time interval, which is defined in 
+                // Globals.java
                 try {
                     Thread.sleep(Globals.SENDER_RECEIVE_INTERVAL);
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    // Do nothing
                 }
             }
 

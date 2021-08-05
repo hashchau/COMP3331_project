@@ -3,6 +3,9 @@ import java.util.*;
 import java.net.*;
 
 public class Helper {
+
+    // Used for debugging
+    // Prints the values that will be contained inside a packet's header
     public static void printHeader(int seqNum, int ackNum, int ackFlag, 
         int synFlag, int finFlag, int maxSegmentSize, int maxWindowSize) {
         System.err.print(
@@ -16,12 +19,14 @@ public class Helper {
         );
     }
 
+    // Find the difference in time between two given times
     public static double elapsedTimeInMillis(long start, long current) {
         long elapsedNanoSecs = current - start;
         double elapsedMilliSecs = elapsedNanoSecs / 1000000.0;
         return elapsedMilliSecs;
     }
 
+    // Use the given header field values to generate a byte array to store in a packet.
     public static byte[] makePacketBytes(int seqNum, int ackNum,
         int ackFlag, int synFlag, int finFlag, int maxSegmentSize,
         int maxWindowSize) throws IOException {
@@ -37,7 +42,8 @@ public class Helper {
             return byteOut.toByteArray();
     }
 
-
+    // Read at most MSS bytes of data from the input file and create a UDP Datagram Packet using
+    // this data as well as global header values
     public static DatagramPacket createDataPacket() throws IOException {
         Globals.bytesRead = Globals.inFromFile.read(Globals.fileData);
 
@@ -64,6 +70,7 @@ public class Helper {
         
     }
 
+    // Add a line to Sender_log.txt to log a dropped packet
     public static void logSend(int seqNum, int numBytes, int ackNum) {
         Globals.senderNumBytes = Globals.bytesRead;
                     
@@ -72,6 +79,7 @@ public class Helper {
             seqNum, numBytes, ackNum);
     }
 
+    // Add a line to Sender_log.txt to log a dropped packet
     public static void logDrop(int seqNum, int numBytes, int ackNum) {
         Globals.senderNumBytes = Globals.bytesRead;
                     
@@ -80,6 +88,8 @@ public class Helper {
             seqNum, numBytes, ackNum);
     }
 
+    // PL module implementation
+    // Decides whether to drop the next sent packet or not
     public static boolean isPacketDropped() {
         if (Globals.randomGen.nextFloat() > Globals.probabilityDrop) {
             return false;
@@ -88,6 +98,7 @@ public class Helper {
         }
     } 
 
+    // Retransmit the packet with the given seqNum as long as it's in the sender's buffer
     public static void retransmit(ArrayList<Packet> sendBuffer, int seqNum) throws IOException {
         for (Packet currPacket : sendBuffer) {
             if (currPacket.getSeqNum() == seqNum) {
@@ -106,32 +117,5 @@ public class Helper {
             }
         }
     }
-
-    // public static void retransmit(ArrayList<Packet> sendBuffer, int seqNum) throws IOException {
-    //     for (Packet currPacket : sendBuffer) {
-    //         if (currPacket.getSeqNum() == seqNum) {
-    //             if (Helper.isPacketDropped() == true) {
-    //                 Helper.logDrop(
-    //                     currPacket.getSeqNum(),
-    //                     currPacket.getDataLength(),
-    //                     currPacket.getAckNum()
-    //                 );
-    //                 System.err.println("Packet dropped!");
-    //                 Globals.totalPacketsDropped++;
-    //             } else {
-    //                 currPacket.setTimeSent(System.nanoTime());
-    //                 DatagramPacket sendPacket = currPacket.createDatagramPacket();
-    //                 Globals.senderSocket.send(sendPacket);
-    //                 Helper.logSend(
-    //                     currPacket.getSeqNum(),
-    //                     currPacket.getDataLength(),
-    //                     currPacket.getAckNum()
-    //                 );
-    //                 Globals.totalRetransmittedSegments++;
-    //             }
-                
-    //         }
-    //     }
-    // }
 
 }

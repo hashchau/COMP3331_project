@@ -3,11 +3,10 @@ import java.net.*;
 import java.util.*;
 
 public class Sender {
-    private static final int headerSize = 19;
+
 	public static void main(String[] args) throws Exception {
 
-        // Initialise seq and ack nums for logging.
-
+        // Initialise seq and ack nums for logging
         Globals.senderSeqNum = Globals.initSeqNum;
         Globals.senderAckNum = 0;
         Globals.senderNumBytes = 0;
@@ -23,8 +22,8 @@ public class Sender {
         Globals.probabilityDrop = Float.parseFloat(args[6]);
         Globals.seed = Long.parseLong(args[7]);
 
-        // Calculate packet size from given MSS and designed header size.
-        int packetSize = headerSize + Globals.maxSegmentSize;
+        // Calculate packet size from given MSS and designed header size
+        int packetSize = Globals.HEADER_SIZE + Globals.maxSegmentSize;
 
         // Open Sender_log.txt for logging sender packets
         File senderLogFile = new File("Sender_log.txt");
@@ -36,19 +35,23 @@ public class Sender {
 		// Create socket, using any port, which connects to receiver
 		Globals.senderSocket = new DatagramSocket(0);
 
+        // Set the socket to only block for a certain amount of time, which is defined in 
+        // Globals.java
         try {
             Globals.senderSocket.setSoTimeout(Globals.SOCKET_TIMEOUT);
         } catch (SocketException e) {
-            // Do nothing.
+            // Do nothing
         }
 
+        // Set the UDP buffer size to its maximum value so that the chance of UDP packets dropping,
+        // due to a full UDP receive buffer, is minimised
         Globals.senderSocket.setReceiveBufferSize(Globals.RECEIVE_BUFFER_SIZE);
         int receiveBufferSize = Globals.senderSocket.getReceiveBufferSize();
-        System.err.println("receiveBufferSize == " + receiveBufferSize);
         
 
         // Send out SYN -------------------------------------------------------
 
+        // Initiate the connection establishment by sending out a SYN packet
         byte[] handshakeData = Helper.makePacketBytes(Globals.senderSeqNum, 
             Globals.senderAckNum, 0, 1, 0, Globals.maxSegmentSize, Globals.maxWindowSize);
         
@@ -69,6 +72,7 @@ public class Sender {
             new DatagramPacket(receiveData, receiveData.length);
         Globals.senderSocket.receive(receivePacket);
 
+        // Get field values from received packet
         byte[] currBytes = receivePacket.getData();
         ByteArrayInputStream byteIn = new ByteArrayInputStream(currBytes);
         DataInputStream dataIn = new DataInputStream(byteIn);
@@ -84,8 +88,9 @@ public class Sender {
         Globals.senderSeqNum = Globals.receiverAckNum;
         Globals.senderAckNum = Globals.receiverSeqNum + 1;
 
+       // Received a SYN-ACK packet from the receiver so send out an ACK packet to finalise the 
+        // connection establishment
         if (receiverSynFlag == 1 && receiverAckFlag == 1) {
-            // System.err.println("Received SYN-ACK, so sending out ACK.");
             Logger.logData(Globals.logStream, "rcv", 
                 Helper.elapsedTimeInMillis(Globals.start, System.nanoTime()), "SA", 
                 Globals.receiverSeqNum, Globals.receiverNumBytes, Globals.receiverAckNum);
@@ -111,26 +116,27 @@ public class Sender {
         // Create packet buffer for sending data
         Globals.sendBuffer = new ArrayList<>();
 
-        // get input from file
+        // Create an input stream to read from the input file
         Globals.fileToSend = new File(Globals.filename);
         Globals.inFromFile = new FileInputStream(Globals.fileToSend);
 
-        //prepare for sending
+        // Prepare for sending
         Globals.fileData = new byte[Globals.maxSegmentSize];
         Globals.senderNumBytes = Globals.maxSegmentSize;
-        // int Globals.bytesRead;
 
+        // Create threads for sending and receiving packets simultaneously
         SenderSendThread sst = new SenderSendThread();
         Thread sendingThread = new Thread(sst); 
         SenderReceiveThread srt = new SenderReceiveThread();
         Thread receivingThread = new Thread(srt);
 
+        // Start the created threads
         sendingThread.start();
         receivingThread.start();
 
+        // Wait for the threads to finish before continuing on with the current main method
         sendingThread.join();
         receivingThread.join();
-
 
         // File transferred so send out FIN -----------------------------------
 
@@ -152,7 +158,6 @@ public class Sender {
 
         // Receive server's FIN-ACK and send out ACK ------------------------------
 
-
         receiveData = new byte[packetSize];
 
         receivePacket = new DatagramPacket(receiveData, receiveData.length);
@@ -161,8 +166,7 @@ public class Sender {
 
         Globals.senderSocket.receive(receivePacket);
 
-        // System.err.println("FIN-ACK packet is this long: " + receivePacket.getLength());
-
+        // Get field values from received packet
         currBytes = receivePacket.getData();
         byteIn = new ByteArrayInputStream(currBytes);
         dataIn = new DataInputStream(byteIn);
@@ -176,8 +180,8 @@ public class Sender {
         Globals.senderSeqNum = Globals.receiverAckNum;
         Globals.senderAckNum = Globals.receiverSeqNum + 1;
 
+        // Received FIN-ACK packet so send out final ACK packet
         if (receiverFinFlag == 1 && receiverAckFlag == 1) {
-            // System.err.println("Received server's FIN-ACK so sending out ACK.");
             Logger.logData(Globals.logStream, "rcv", 
                 Helper.elapsedTimeInMillis(Globals.start, System.nanoTime()), "FA", 
                 Globals.receiverSeqNum, Globals.receiverNumBytes, Globals.receiverAckNum);
@@ -197,8 +201,7 @@ public class Sender {
         // Log summary stats
         Logger.logSenderStats(Globals.logStream);
 
-        // Close the socket ---------------------------------------------------
-
+        // Close the UDP socket and any open streams
         Globals.senderSocket.close();
         Globals.logStream.close();
         Globals.inFromFile.close();

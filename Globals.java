@@ -34,7 +34,6 @@ public class Globals {
     public static Condition syncCondition = syncLock.newCondition();
 
     // Packet-related
-
     public static int senderNumBytes;
     public static int receiverNumBytes;
     public static int bytesRead;

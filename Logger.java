@@ -2,6 +2,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 public class Logger {
+
+    // Use the given values to output a correct line into the log file with the correct format
     public static void logData(FileOutputStream logStream, String packetStatus, 
         double elapsedTime, String packetType, int seqNum, int numBytes, 
         int ackNum) {
@@ -13,16 +15,11 @@ public class Logger {
         try {
             logStream.write(logBytes);
         } catch (IOException e) {
-            e.printStackTrace();
+            // e.printStackTrace();
         }
-        
-        // Debugging print statement.
-        System.err.print(logString);
-
-        // If necessary, use StringBuffer class to create string.
-        // Learn how to format tab-separated string.
     }
 
+    // Output a summary of the sender's stats to Sender_log.txt
     public static void logSenderStats(FileOutputStream logStream) {
         StringBuffer statString = new StringBuffer("");
         statString.append("Amount of (original) Data Transferred (in bytes): " + 
@@ -40,13 +37,11 @@ public class Logger {
         try {
             logStream.write(stats.getBytes());
         } catch (IOException e) {
-            e.printStackTrace();
+            // e.printStackTrace();
         }
-
-        // Debugging print statement.
-        System.err.print(stats);
     }
 
+    // Output a summary of the receiver's stats to Receiver_log.txt
     public static void logReceiverStats(FileOutputStream logStream) {
         StringBuffer statString = new StringBuffer("");
         statString.append("Amount of (original) Data Received (in bytes): " + 
@@ -60,10 +55,7 @@ public class Logger {
         try {
             logStream.write(stats.getBytes());
         } catch (IOException e) {
-            e.printStackTrace();
+            // e.printStackTrace();
         }
-
-        // Debugging print statement.
-        System.err.print(stats);
     }
 }

@@ -3,6 +3,7 @@ import java.net.*;
 
 public class Packet {
 
+    // Attributes
     private int seqNum;
     private int ackNum;
     private int ackFlag;
@@ -13,6 +14,7 @@ public class Packet {
     private byte[] data = null;
     private long timeSent;
 
+    // Constructor 
     public Packet(int seqNum, int ackNum, int ackFlag, int synFlag, int finFlag, 
         int maxSegmentSize, int maxWindowSize, byte[] data, long timeSent) {
         this.seqNum = seqNum;
@@ -26,6 +28,7 @@ public class Packet {
         this.timeSent = timeSent;
     }
 
+    // Fill up the Packet object with Header and Data bytes
     public void getData() throws IOException {
 
         Globals.bytesRead = Globals.inFromFile.read(Globals.fileData);
@@ -49,6 +52,7 @@ public class Packet {
         Globals.totalSegmentsSent++;
     }
 
+    // Fill up with Packet object with Header bytes
     public void getHeaders() throws IOException {
 
         ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
@@ -65,6 +69,7 @@ public class Packet {
 
     }
 
+    // Create a UDP Datagram Packet object from a custom Packet object
     public DatagramPacket createDatagramPacket() {
         DatagramPacket sendPacket = 
         new DatagramPacket(this.data, this.data.length, 
@@ -72,6 +77,7 @@ public class Packet {
         return sendPacket;
     }
 
+    // Create a packet which acknowledges a received data packet
     public DatagramPacket createAckPacket(InetAddress senderHostIP, int senderPort) {
         DatagramPacket sendPacket = 
         new DatagramPacket(this.data, this.data.length, 
@@ -79,14 +85,17 @@ public class Packet {
         return sendPacket;
     }
 
+    // Get the length of the data in a packet that is to be sent
     public int getDataLength() {
         return (this.data.length - Globals.HEADER_SIZE);
     }
 
+    // Get the length of the data in a packet that was received
     public int getLength() {
         return this.data.length;
     }
 
+    // Write data to the output file
     public void writeData(FileOutputStream outputStream) {
         try {
             outputStream.write(this.data);
@@ -98,9 +107,7 @@ public class Packet {
         Globals.totalSegmentsReceived++;
     }
 
-
-
-
+    // Getters and setters
     public int getSeqNum() {
         return this.seqNum;
     }
